@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warehouse 3D Map</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+    #canvas-container { width: 100vw; height: 100vh; position: relative; }
+    canvas { display: block; }
+
+    #hud {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(10,10,30,0.85);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    #hud h1 { color: #e0e0ff; font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; }
+    #controls-hint { color: #888; font-size: 0.75rem; }
+
+    #tooltip {
+      position: absolute;
+      background: rgba(10,10,40,0.92);
+      border: 1px solid rgba(100,180,255,0.4);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e0e8ff;
+      font-size: 0.82rem;
+      pointer-events: none;
+      display: none;
+      z-index: 20;
+      min-width: 160px;
+      backdrop-filter: blur(6px);
+    }
+    #tooltip .loc { font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: #7dd3fc; }
+    #tooltip .status { font-weight: 600; }
+    #tooltip .status.full { color: #f87171; }
+    #tooltip .status.empty { color: #4ade80; }
+    #tooltip .hint { color: #666; font-size: 0.72rem; margin-top: 6px; }
+
+    #counter-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      padding: 14px 24px;
+      background: rgba(10,10,30,0.88);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    .stat-block { text-align: center; }
+    .stat-block .num {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .stat-block .label {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    #stat-empty .num { color: #4ade80; }
+    #stat-empty .label { color: #16a34a; }
+    #stat-full .num { color: #f87171; }
+    #stat-full .label { color: #b91c1c; }
+    #stat-total .num { color: #93c5fd; }
+    #stat-total .label { color: #3b82f6; }
+
+    .divider { width: 1px; height: 40px; background: rgba(255,255,255,0.12); }
+
+    #legend {
+      position: absolute;
+      top: 64px;
+      right: 16px;
+      background: rgba(10,10,30,0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px 16px;
+      z-index: 10;
+      backdrop-filter: blur(6px);
+    }
+    #legend h3 { color: #aaa; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.78rem; color: #ccc; }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
+    .sw-empty { background: #22c55e; }
+    .sw-full { background: #ef4444; }
+    .sw-floor { background: #475569; }
+    .sw-selected { background: #facc15; }
+
+    #view-controls {
+      position: absolute;
+      top: 64px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
+    .view-btn {
+      background: rgba(10,10,40,0.85);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #ccc;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+    .view-btn:hover { background: rgba(59,130,246,0.3); border-color: #3b82f6; color: #fff; }
+  </style>
+</head>
+<body>
+<div id="canvas-container">
+  <div id="hud">
+    <h1>WAREHOUSE 3D MAP</h1>
+    <div id="controls-hint">Left drag: rotate &nbsp;|&nbsp; Right drag / scroll: zoom &nbsp;|&nbsp; Middle drag: pan &nbsp;|&nbsp; Click spot: toggle full/empty</div>
+  </div>
+
+  <div id="tooltip">
+    <div class="loc" id="tt-loc"></div>
+    <div class="status" id="tt-status"></div>
+    <div class="hint">Click to toggle status</div>
+  </div>
+
+  <div id="view-controls">
+    <button class="view-btn" onclick="setView('top')">Top View</button>
+    <button class="view-btn" onclick="setView('front')">Front View</button>
+    <button class="view-btn" onclick="setView('iso')">Isometric</button>
+    <button class="view-btn" onclick="resetAll()">Reset All → Empty</button>
+    <button class="view-btn" onclick="fillAll()">Set All → Full</button>
+  </div>
+
+  <div id="legend">
+    <h3>Legend</h3>
+    <div class="legend-item"><div class="legend-swatch sw-empty"></div> Empty</div>
+    <div class="legend-item"><div class="legend-swatch sw-full"></div> Full</div>
+    <div class="legend-item"><div class="legend-swatch sw-selected"></div> Selected</div>
+    <div class="legend-item"><div class="legend-swatch sw-floor"></div> Floor/Structure</div>
+  </div>
+
+  <div id="counter-bar">
+    <div class="stat-block" id="stat-empty">
+      <div class="num" id="count-empty">0</div>
+      <div class="label">Empty</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat-block" id="stat-full">
+      <div class="num" id="count-full">0</div>
+      <div class="label">Full</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat-block" id="stat-total">
+      <div class="num" id="count-total">0</div>
+      <div class="label">Total Spots</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+// ─── Scene Setup ───────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x0d1117);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0d1117, 80, 180);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 45, 70);
+camera.lookAt(0, 0, 0);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 10;
+controls.maxDistance = 150;
+controls.maxPolarAngle = Math.PI / 2.05;
+
+// ─── Lighting ──────────────────────────────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0x8090b0, 0.6);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(30, 60, 40);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
+dirLight.shadow.camera.near = 1;
+dirLight.shadow.camera.far = 200;
+dirLight.shadow.camera.left = -60;
+dirLight.shadow.camera.right = 60;
+dirLight.shadow.camera.top = 60;
+dirLight.shadow.camera.bottom = -60;
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0x4060ff, 0.3);
+fillLight.position.set(-30, 20, -20);
+scene.add(fillLight);
+
+// ─── Materials ─────────────────────────────────────────────────────────────
+const MAT_FLOOR   = new THREE.MeshLambertMaterial({ color: 0x2d3748 });
+const MAT_WALL    = new THREE.MeshLambertMaterial({ color: 0x1e293b, transparent: true, opacity: 0.4 });
+const MAT_RACK    = new THREE.MeshLambertMaterial({ color: 0x334155 });
+const MAT_BEAM    = new THREE.MeshLambertMaterial({ color: 0x1e3a5f });
+const MAT_EMPTY   = new THREE.MeshLambertMaterial({ color: 0x22c55e });
+const MAT_FULL    = new THREE.MeshLambertMaterial({ color: 0xef4444 });
+const MAT_HOVER   = new THREE.MeshLambertMaterial({ color: 0xfacc15 });
+
+// ─── Warehouse Layout Definition ───────────────────────────────────────────
+// Based on the 3D-printed model:
+// • Long rectangular floor (X axis = width, Z axis = depth)
+// • 3 rack zones separated by 2 main cross-aisles + perimeter aisles
+// • Each zone has double-sided rows of racks
+// • 3 vertical levels per rack
+
+const FLOOR_W = 80;   // total warehouse width
+const FLOOR_D = 30;   // total warehouse depth
+const LEVEL_H = 2.2;  // height per pallet level
+const LEVELS  = 3;
+const SPOT_W  = 2.6;  // pallet width
+const SPOT_D  = 2.2;  // pallet depth
+const SPOT_H  = 1.6;  // pallet height (box on pallet)
+const RACK_T  = 0.18; // rack upright thickness
+
+// Zone definitions: [startX, startZ, cols, rowPairs, label]
+// rowPairs = number of back-to-back rack pairs (each pair = 2 rows facing the aisle)
+const ZONES = [
+  { id: 'A', x: -36, z: -11, cols: 6, label: 'A' },
+  { id: 'B', x: -36, z:   0, cols: 6, label: 'B' },
+  { id: 'C', x: -14, z: -11, cols: 4, label: 'C' },
+  { id: 'D', x: -14, z:   0, cols: 4, label: 'D' },
+  { id: 'E', x:   4, z: -11, cols: 7, label: 'E' },
+  { id: 'F', x:   4, z:   0, cols: 7, label: 'F' },
+  { id: 'G', x:  26, z: -11, cols: 5, label: 'G' },
+  { id: 'H', x:  26, z:   0, cols: 5, label: 'H' },
+];
+
+// ─── Build Floor ───────────────────────────────────────────────────────────
+const floorGeo = new THREE.BoxGeometry(FLOOR_W + 4, 0.3, FLOOR_D + 4);
+const floor = new THREE.Mesh(floorGeo, MAT_FLOOR);
+floor.position.set(0, -0.15, 0);
+floor.receiveShadow = true;
+scene.add(floor);
+
+// Grid lines on floor
+const gridHelper = new THREE.GridHelper(FLOOR_W + 4, 20, 0x1e3a5f, 0x1e3a5f);
+gridHelper.position.y = 0.01;
+scene.add(gridHelper);
+
+// ─── Walls ─────────────────────────────────────────────────────────────────
+function makeWall(w, h, d, x, y, z) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mesh = new THREE.Mesh(geo, MAT_WALL);
+  mesh.position.set(x, y, z);
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+}
+const WH = 10;
+makeWall(FLOOR_W + 4, WH, 0.3,  0,      WH/2, -(FLOOR_D/2+2));
+makeWall(FLOOR_W + 4, WH, 0.3,  0,      WH/2,  (FLOOR_D/2+2));
+makeWall(0.3, WH, FLOOR_D + 4, -(FLOOR_W/2+2), WH/2, 0);
+makeWall(0.3, WH, FLOOR_D + 4,  (FLOOR_W/2+2), WH/2, 0);
+
+// ─── Rack Structure Builder ─────────────────────────────────────────────────
+function buildRackRow(startX, startZ, cols, zDir, rowId) {
+  const group = new THREE.Group();
+
+  // Uprights
+  for (let c = 0; c <= cols; c++) {
+    for (let lv = 0; lv <= LEVELS; lv++) {
+      const upGeo = new THREE.BoxGeometry(RACK_T, LEVEL_H, SPOT_D);
+      const up = new THREE.Mesh(upGeo, MAT_RACK);
+      up.position.set(startX + c * SPOT_W, lv * LEVEL_H + LEVEL_H / 2, startZ + zDir * SPOT_D / 2);
+      up.castShadow = true;
+      scene.add(up);
+    }
+  }
+
+  // Horizontal beams per level
+  for (let lv = 1; lv <= LEVELS; lv++) {
+    const beamGeo = new THREE.BoxGeometry(cols * SPOT_W, 0.12, 0.12);
+    const beam = new THREE.Mesh(beamGeo, MAT_BEAM);
+    beam.position.set(startX + (cols * SPOT_W) / 2, lv * LEVEL_H, startZ + zDir * SPOT_D / 2);
+    scene.add(beam);
+    // Back beam
+    const beam2 = beam.clone();
+    beam2.position.z = startZ + zDir * SPOT_D * 0.9;
+    scene.add(beam2);
+  }
+}
+
+// ─── Skid Spot Builder ──────────────────────────────────────────────────────
+const skidSpots = [];
+
+function buildZone(zone) {
+  const { id, x, z, cols, label } = zone;
+  // Build rack structure for this row
+  buildRackRow(x, z, cols, -1, id);
+
+  for (let col = 0; col < cols; col++) {
+    for (let lv = 0; lv < LEVELS; lv++) {
+      const locationId = `${label}${col + 1}-L${lv + 1}`;
+
+      // Pallet platform
+      const palletGeo = new THREE.BoxGeometry(SPOT_W - 0.3, 0.18, SPOT_D - 0.2);
+      const pallet = new THREE.Mesh(palletGeo, MAT_RACK);
+      pallet.position.set(
+        x + col * SPOT_W + SPOT_W / 2,
+        lv * LEVEL_H + 0.09,
+        z - SPOT_D / 2 + 0.05
+      );
+      pallet.castShadow = true;
+      scene.add(pallet);
+
+      // Skid box (the interactive spot)
+      const boxGeo = new THREE.BoxGeometry(SPOT_W - 0.4, SPOT_H, SPOT_D - 0.35);
+      const box = new THREE.Mesh(boxGeo, MAT_EMPTY.clone());
+      box.position.set(
+        x + col * SPOT_W + SPOT_W / 2,
+        lv * LEVEL_H + 0.18 + SPOT_H / 2,
+        z - SPOT_D / 2 + 0.05
+      );
+      box.castShadow = true;
+      box.receiveShadow = true;
+
+      box.userData = {
+        locationId,
+        zone: label,
+        col: col + 1,
+        level: lv + 1,
+        isFull: false,
+        isSkidSpot: true,
+        originalColor: 0x22c55e,
+      };
+
+      scene.add(box);
+      skidSpots.push(box);
+    }
+  }
+}
+
+ZONES.forEach(buildZone);
+
+// ─── Counter Update ─────────────────────────────────────────────────────────
+function updateCounters() {
+  const full  = skidSpots.filter(s => s.userData.isFull).length;
+  const empty = skidSpots.length - full;
+  document.getElementById('count-empty').textContent = empty;
+  document.getElementById('count-full').textContent  = full;
+  document.getElementById('count-total').textContent = skidSpots.length;
+}
+updateCounters();
+
+// ─── Interaction ────────────────────────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse     = new THREE.Vector2();
+const tooltip   = document.getElementById('tooltip');
+let hoveredSpot  = null;
+let selectedSpot = null;
+
+function getSpotColor(spot) {
+  return spot.userData.isFull ? 0xef4444 : 0x22c55e;
+}
+
+renderer.domElement.addEventListener('mousemove', e => {
+  mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(skidSpots);
+
+  // Reset previous hover
+  if (hoveredSpot && hoveredSpot !== selectedSpot) {
+    hoveredSpot.material.color.setHex(getSpotColor(hoveredSpot));
+    hoveredSpot.material.emissive?.setHex(0x000000);
+  }
+
+  if (hits.length > 0) {
+    hoveredSpot = hits[0].object;
+    if (hoveredSpot !== selectedSpot) {
+      hoveredSpot.material.color.setHex(0xfacc15);
+    }
+    const d = hoveredSpot.userData;
+    document.getElementById('tt-loc').textContent = d.locationId;
+    const statusEl = document.getElementById('tt-status');
+    statusEl.textContent = d.isFull ? 'FULL' : 'EMPTY';
+    statusEl.className   = 'status ' + (d.isFull ? 'full' : 'empty');
+    tooltip.style.display = 'block';
+    tooltip.style.left    = (e.clientX + 14) + 'px';
+    tooltip.style.top     = (e.clientY - 10) + 'px';
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    hoveredSpot = null;
+    tooltip.style.display = 'none';
+    renderer.domElement.style.cursor = 'default';
+  }
+});
+
+renderer.domElement.addEventListener('click', e => {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(skidSpots);
+  if (hits.length > 0) {
+    const spot = hits[0].object;
+    spot.userData.isFull = !spot.userData.isFull;
+    spot.material.color.setHex(getSpotColor(spot));
+    updateCounters();
+
+    // Update tooltip
+    const statusEl = document.getElementById('tt-status');
+    statusEl.textContent = spot.userData.isFull ? 'FULL' : 'EMPTY';
+    statusEl.className   = 'status ' + (spot.userData.isFull ? 'full' : 'empty');
+  }
+});
+
+// ─── View Presets ───────────────────────────────────────────────────────────
+function setView(v) {
+  if (v === 'top') {
+    camera.position.set(0, 90, 0.01);
+    camera.lookAt(0, 0, 0);
+  } else if (v === 'front') {
+    camera.position.set(0, 12, 70);
+    camera.lookAt(0, 5, 0);
+  } else if (v === 'iso') {
+    camera.position.set(50, 45, 55);
+    camera.lookAt(0, 0, 0);
+  }
+  controls.update();
+}
+
+function resetAll() {
+  skidSpots.forEach(s => {
+    s.userData.isFull = false;
+    s.material.color.setHex(0x22c55e);
+  });
+  updateCounters();
+}
+
+function fillAll() {
+  skidSpots.forEach(s => {
+    s.userData.isFull = true;
+    s.material.color.setHex(0xef4444);
+  });
+  updateCounters();
+}
+
+// ─── Resize ─────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── Animate ────────────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
