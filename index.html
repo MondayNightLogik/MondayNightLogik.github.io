@@ -304,14 +304,14 @@
   var PAIR_P    = PAIR_W + AISLE;          // pair centre-to-centre pitch
   var SPOT_H    = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
 
-  // Pair layout: backs face OUTWARD, shared aisle runs BETWEEN the two rows.
-  //   [back | Row_A face → AISLE ← Row_B face | back]
+  // Pair layout: BACKS touch at pair centre, AISLES run between adjacent pairs.
+  //   AISLE | [Row_A face | back·back | Row_B face] | AISLE |
   // X centre of row ri:
   function rowX(ri, firstPairX) {
     var pairIdx = Math.floor(ri / 2);
-    var side    = ri % 2;   // 0 = west row (spots face east into aisle), 1 = east row (spots face west into aisle)
+    var side    = ri % 2;   // 0 = west row (face left), 1 = east row (face right)
     var pc      = firstPairX + pairIdx * PAIR_P;
-    return pc + (side === 0 ? -(AISLE/2 + BAY_W/2) : (AISLE/2 + BAY_W/2));
+    return pc + (side === 0 ? -(BACK_GAP/2 + BAY_W/2) : (BACK_GAP/2 + BAY_W/2));
   }
 
   // ── Layout data (mutable) ──────────────────────────────────────────────
@@ -357,14 +357,23 @@
     grid.position.set(0,0.01,z0+wD/2);
     staticGroup.add(grid);
 
-    // Yellow aisle stripes between each back-to-back pair
+    // Yellow aisle stripes — one between each adjacent pair of back-to-back rows
     var mAisle = new THREE.MeshLambertMaterial({color:0xd4a017});
-    for(var pi=0; pi<nPairs; pi++){
-      var aisleX = firstPairX + pi*PAIR_P;  // pair centre = middle of the aisle
+    for(var pi=0; pi<nPairs-1; pi++){
+      var aisleX = firstPairX + (pi + 0.5) * PAIR_P;  // midpoint between pair pi and pair pi+1
       var stripe = new THREE.Mesh(geo(AISLE-0.3, 0.02, wD+20), mAisle);
       stripe.position.set(aisleX, 0.01, z0+wD/2);
       staticGroup.add(stripe);
     }
+    // Also stripe on the outer aisles (west of pair 0 and east of last pair)
+    var mAisle2 = new THREE.MeshLambertMaterial({color:0xd4a017});
+    var outerW = AISLE - 0.3;
+    var stripeW = new THREE.Mesh(geo(outerW, 0.02, wD+20), mAisle2);
+    stripeW.position.set(firstPairX - PAIR_P/2, 0.01, z0+wD/2);
+    staticGroup.add(stripeW);
+    var stripeE = new THREE.Mesh(geo(outerW, 0.02, wD+20), mAisle2);
+    stripeE.position.set(firstPairX + (nPairs-0.5)*PAIR_P, 0.01, z0+wD/2);
+    staticGroup.add(stripeE);
 
     var WH=maxC*LVL_H+4;
     sm(wW+20,WH,0.3,mWall,0,WH/2,z0-2);
@@ -391,19 +400,19 @@
       var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); rackGroup.add(m); return m;
     }
 
-    // Draw a thin back-panel between adjacent PAIRS (where their outer backs meet)
+    // Draw a thin back-panel inside each pair (where the backs of the two rows meet)
     var nPairs2 = Math.ceil(layoutData.length/2);
-    for(var pi=0; pi<nPairs2-1; pi++){
-      // back panel sits between outer back of pair pi and outer back of pair pi+1
-      var rowB = layoutData[pi*2+1];   // east row of pair pi
-      var rowN = layoutData[(pi+1)*2]; // west row of pair pi+1
-      if(!rowB || !rowN) continue;
+    for(var pi=0; pi<nPairs2; pi++){
+      var rowA = layoutData[pi*2];
+      var rowB = layoutData[pi*2+1];
+      if(!rowA) continue;
+      var levelsA = rowA.levels, levelsB = rowB ? rowB.levels : rowA.levels;
       var maxLevels = Math.max(
-        Math.max.apply(null, rowB.levels),
-        Math.max.apply(null, rowN.levels));
-      var panH  = maxLevels * LVL_H;
-      var maxCols = Math.max(rowB.levels.length, rowN.levels.length);
-      var panX  = dims.firstPairX + pi*PAIR_P + AISLE/2 + BAY_W + BACK_GAP/2;
+        Math.max.apply(null, levelsA),
+        Math.max.apply(null, levelsB));
+      var panH    = maxLevels * LVL_H;
+      var maxCols = Math.max(levelsA.length, levelsB.length);
+      var panX    = dims.firstPairX + pi * PAIR_P;  // pair centre = where backs meet
       rm(BACK_GAP, panH, maxCols*COL_D, mUpright, panX, panH/2, dims.z0+maxCols*COL_D/2);
     }
 
