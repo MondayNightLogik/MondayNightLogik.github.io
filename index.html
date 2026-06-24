@@ -304,12 +304,14 @@
   var PAIR_P    = PAIR_W + AISLE;          // pair centre-to-centre pitch
   var SPOT_H    = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
 
-  // X centre of row ri within the warehouse (pairs rows 0+1, 2+3, 4+5 …)
+  // Pair layout: backs face OUTWARD, shared aisle runs BETWEEN the two rows.
+  //   [back | Row_A face → AISLE ← Row_B face | back]
+  // X centre of row ri:
   function rowX(ri, firstPairX) {
     var pairIdx = Math.floor(ri / 2);
-    var side    = ri % 2;   // 0 = west face of pair, 1 = east face
+    var side    = ri % 2;   // 0 = west row (spots face east into aisle), 1 = east row (spots face west into aisle)
     var pc      = firstPairX + pairIdx * PAIR_P;
-    return pc + (side === 0 ? -(BAY_W/2 + BACK_GAP/2) : (BAY_W/2 + BACK_GAP/2));
+    return pc + (side === 0 ? -(AISLE/2 + BAY_W/2) : (AISLE/2 + BAY_W/2));
   }
 
   // ── Layout data (mutable) ──────────────────────────────────────────────
@@ -380,22 +382,20 @@
       var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); rackGroup.add(m); return m;
     }
 
-    // Draw a thin back-panel between each pair of rows
+    // Draw a thin back-panel between adjacent PAIRS (where their outer backs meet)
     var nPairs2 = Math.ceil(layoutData.length/2);
-    for(var pi=0; pi<nPairs2; pi++){
-      var row0=layoutData[pi*2], row1=layoutData[pi*2+1];
-      var maxLevels0 = row0 ? Math.max.apply(null,row0.levels) : 0;
-      var maxLevels1 = row1 ? Math.max.apply(null,row1.levels) : 0;
-      var panH = Math.max(maxLevels0, maxLevels1) * LVL_H;
-      var panZ = dims.z0 + Math.max(
-        row0 ? row0.levels.length : 0,
-        row1 ? row1.levels.length : 0) * COL_D / 2;
-      var pc = dims.firstPairX + pi*PAIR_P;
-      rm(BACK_GAP, panH, Math.max(
-        row0 ? row0.levels.length : 0,
-        row1 ? row1.levels.length : 0)*COL_D,
-        mUpright, pc, panH/2, dims.z0 + Math.max(
-        row0?row0.levels.length:0, row1?row1.levels.length:0)*COL_D/2);
+    for(var pi=0; pi<nPairs2-1; pi++){
+      // back panel sits between outer back of pair pi and outer back of pair pi+1
+      var rowB = layoutData[pi*2+1];   // east row of pair pi
+      var rowN = layoutData[(pi+1)*2]; // west row of pair pi+1
+      if(!rowB || !rowN) continue;
+      var maxLevels = Math.max(
+        Math.max.apply(null, rowB.levels),
+        Math.max.apply(null, rowN.levels));
+      var panH  = maxLevels * LVL_H;
+      var maxCols = Math.max(rowB.levels.length, rowN.levels.length);
+      var panX  = dims.firstPairX + pi*PAIR_P + AISLE/2 + BAY_W + BACK_GAP/2;
+      rm(BACK_GAP, panH, maxCols*COL_D, mUpright, panX, panH/2, dims.z0+maxCols*COL_D/2);
     }
 
     layoutData.forEach(function(row, ri){
