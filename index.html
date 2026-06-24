@@ -297,9 +297,20 @@
   }
 
   // ── Warehouse dims ─────────────────────────────────────────────────────
-  var SPOT_W = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
-  var LVL_H  = 2.0, AISLE = 3.0,      ROW_P = BAY_W + AISLE;
-  var SPOT_H = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
+  var SPOT_W    = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
+  var LVL_H     = 2.0, AISLE = 3.0;
+  var BACK_GAP  = 0.22;                    // gap between backs of a paired row
+  var PAIR_W    = BAY_W * 2 + BACK_GAP;   // total X width of one pair
+  var PAIR_P    = PAIR_W + AISLE;          // pair centre-to-centre pitch
+  var SPOT_H    = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
+
+  // X centre of row ri within the warehouse (pairs rows 0+1, 2+3, 4+5 …)
+  function rowX(ri, firstPairX) {
+    var pairIdx = Math.floor(ri / 2);
+    var side    = ri % 2;   // 0 = west face of pair, 1 = east face
+    var pc      = firstPairX + pairIdx * PAIR_P;
+    return pc + (side === 0 ? -(BAY_W/2 + BACK_GAP/2) : (BAY_W/2 + BACK_GAP/2));
+  }
 
   // ── Layout data (mutable) ──────────────────────────────────────────────
   // Each row: { levels: [n, n, ...] }  — one entry per column (N→S)
@@ -326,11 +337,14 @@
   function buildStatic() {
     while(staticGroup.children.length) staticGroup.remove(staticGroup.children[0]);
 
-    var nRows = layoutData.length;
-    var maxC  = Math.max.apply(null, layoutData.map(function(r){return r.levels.length;}));
-    var wW = Math.max(0, (nRows-1)*ROW_P);
-    var wD = maxC*COL_D;
-    var x0 = -wW/2, z0 = -wD/2;
+    var nRows  = layoutData.length;
+    var nPairs = Math.ceil(nRows / 2);
+    var maxC   = Math.max.apply(null, layoutData.map(function(r){return r.levels.length;}));
+    var wW = Math.max(0, (nPairs - 1) * PAIR_P + PAIR_W);
+    var wD = maxC * COL_D;
+    var firstPairX = -wW/2 + PAIR_W/2;   // X centre of pair 0
+    var x0 = firstPairX - BAY_W - BACK_GAP/2;  // west edge (row 0 outer edge)
+    var z0 = -wD/2;
 
     function sm(w,h,d,mat,x,y,z){
       var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); staticGroup.add(m); return m;
@@ -344,10 +358,10 @@
     var WH=maxC*LVL_H+4;
     sm(wW+20,WH,0.3,mWall,0,WH/2,z0-2);
     sm(wW+20,WH,0.3,mWall,0,WH/2,z0+wD+2);
-    sm(0.3,WH,wD+20,mWall,x0-2,WH/2,z0+wD/2);
-    sm(0.3,WH,wD+20,mWall,x0+wW+2,WH/2,z0+wD/2);
+    sm(0.3,WH,wD+20,mWall,-wW/2-2,WH/2,z0+wD/2);
+    sm(0.3,WH,wD+20,mWall, wW/2+2,WH/2,z0+wD/2);
 
-    return { wW:wW, wD:wD, x0:x0, z0:z0 };
+    return { wW:wW, wD:wD, x0:x0, z0:z0, firstPairX:firstPairX };
   }
 
   // ── Rack + skid spots ──────────────────────────────────────────────────
@@ -366,9 +380,27 @@
       var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); rackGroup.add(m); return m;
     }
 
+    // Draw a thin back-panel between each pair of rows
+    var nPairs2 = Math.ceil(layoutData.length/2);
+    for(var pi=0; pi<nPairs2; pi++){
+      var row0=layoutData[pi*2], row1=layoutData[pi*2+1];
+      var maxLevels0 = row0 ? Math.max.apply(null,row0.levels) : 0;
+      var maxLevels1 = row1 ? Math.max.apply(null,row1.levels) : 0;
+      var panH = Math.max(maxLevels0, maxLevels1) * LVL_H;
+      var panZ = dims.z0 + Math.max(
+        row0 ? row0.levels.length : 0,
+        row1 ? row1.levels.length : 0) * COL_D / 2;
+      var pc = dims.firstPairX + pi*PAIR_P;
+      rm(BACK_GAP, panH, Math.max(
+        row0 ? row0.levels.length : 0,
+        row1 ? row1.levels.length : 0)*COL_D,
+        mUpright, pc, panH/2, dims.z0 + Math.max(
+        row0?row0.levels.length:0, row1?row1.levels.length:0)*COL_D/2);
+    }
+
     layoutData.forEach(function(row, ri){
       var cols   = row.levels;
-      var rx     = x0 + ri*ROW_P;
+      var rx     = rowX(ri, dims.firstPairX);
       var rowNum = ri+1;
 
       // Uprights
@@ -478,7 +510,7 @@
   }
   document.getElementById('vTop').onclick  =function(){cam(midX,250,dims.z0+dims.wD/2+0.01);};
   document.getElementById('vIso').onclick  =function(){cam(midX-40,100,dims.z0+dims.wD/2+130);};
-  document.getElementById('vSide').onclick =function(){cam(dims.x0-30,25,dims.z0+dims.wD/2);};
+  document.getElementById('vSide').onclick =function(){cam(-dims.wW/2-30,25,dims.z0+dims.wD/2);};
   document.getElementById('bReset').onclick=function(){
     skids.forEach(function(s){s.userData.isFull=false;s.material.color.setHex(C_EMPTY);});
     updateCounters();
