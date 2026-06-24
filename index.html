@@ -21,6 +21,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
       backdrop-filter: blur(8px);
       z-index: 10;
+      pointer-events: none;
     }
     #hud h1 { color: #e0e0ff; font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; }
     #controls-hint { color: #888; font-size: 0.75rem; }
@@ -41,7 +42,7 @@
     }
     #tooltip .loc { font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: #7dd3fc; }
     #tooltip .status { font-weight: 600; }
-    #tooltip .status.full { color: #f87171; }
+    #tooltip .status.full  { color: #f87171; }
     #tooltip .status.empty { color: #4ade80; }
     #tooltip .hint { color: #666; font-size: 0.72rem; margin-top: 6px; }
 
@@ -57,51 +58,40 @@
       border-top: 1px solid rgba(255,255,255,0.1);
       backdrop-filter: blur(8px);
       z-index: 10;
+      pointer-events: none;
     }
     .stat-block { text-align: center; }
-    .stat-block .num {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .stat-block .label {
-      font-size: 0.72rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-    #stat-empty .num { color: #4ade80; }
+    .stat-block .num  { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-block .label { font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+    #stat-empty .num   { color: #4ade80; }
     #stat-empty .label { color: #16a34a; }
-    #stat-full .num { color: #f87171; }
-    #stat-full .label { color: #b91c1c; }
-    #stat-total .num { color: #93c5fd; }
+    #stat-full .num    { color: #f87171; }
+    #stat-full .label  { color: #b91c1c; }
+    #stat-total .num   { color: #93c5fd; }
     #stat-total .label { color: #3b82f6; }
-
     .divider { width: 1px; height: 40px; background: rgba(255,255,255,0.12); }
 
     #legend {
       position: absolute;
-      top: 64px;
-      right: 16px;
+      top: 64px; right: 16px;
       background: rgba(10,10,30,0.85);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
       padding: 12px 16px;
       z-index: 10;
       backdrop-filter: blur(6px);
+      pointer-events: none;
     }
     #legend h3 { color: #aaa; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
     .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.78rem; color: #ccc; }
     .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
-    .sw-empty { background: #22c55e; }
-    .sw-full { background: #ef4444; }
-    .sw-floor { background: #475569; }
+    .sw-empty    { background: #22c55e; }
+    .sw-full     { background: #ef4444; }
     .sw-selected { background: #facc15; }
 
     #view-controls {
       position: absolute;
-      top: 64px;
-      left: 16px;
+      top: 64px; left: 16px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -126,29 +116,28 @@
 <div id="canvas-container">
   <div id="hud">
     <h1>WAREHOUSE 3D MAP</h1>
-    <div id="controls-hint">Left drag: rotate &nbsp;|&nbsp; Right drag / scroll: zoom &nbsp;|&nbsp; Middle drag: pan &nbsp;|&nbsp; Click spot: toggle full/empty</div>
+    <div id="controls-hint">Left drag: rotate &nbsp;|&nbsp; Scroll: zoom &nbsp;|&nbsp; Right drag: pan &nbsp;|&nbsp; Click spot: toggle full/empty</div>
   </div>
 
   <div id="tooltip">
-    <div class="loc" id="tt-loc"></div>
+    <div class="loc"    id="tt-loc"></div>
     <div class="status" id="tt-status"></div>
     <div class="hint">Click to toggle status</div>
   </div>
 
   <div id="view-controls">
-    <button class="view-btn" onclick="setView('top')">Top View</button>
-    <button class="view-btn" onclick="setView('front')">Front View</button>
-    <button class="view-btn" onclick="setView('iso')">Isometric</button>
-    <button class="view-btn" onclick="resetAll()">Reset All → Empty</button>
-    <button class="view-btn" onclick="fillAll()">Set All → Full</button>
+    <button class="view-btn" id="btn-top">Top View</button>
+    <button class="view-btn" id="btn-front">Front View</button>
+    <button class="view-btn" id="btn-iso">Isometric</button>
+    <button class="view-btn" id="btn-reset">Reset All → Empty</button>
+    <button class="view-btn" id="btn-fill">Set All → Full</button>
   </div>
 
   <div id="legend">
     <h3>Legend</h3>
     <div class="legend-item"><div class="legend-swatch sw-empty"></div> Empty</div>
     <div class="legend-item"><div class="legend-swatch sw-full"></div> Full</div>
-    <div class="legend-item"><div class="legend-swatch sw-selected"></div> Selected</div>
-    <div class="legend-item"><div class="legend-swatch sw-floor"></div> Floor/Structure</div>
+    <div class="legend-item"><div class="legend-swatch sw-selected"></div> Hovered</div>
   </div>
 
   <div id="counter-bar">
@@ -169,200 +158,200 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/controls/OrbitControls.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
 
-<script>
-// ─── Scene Setup ───────────────────────────────────────────────────────────
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── Renderer ──────────────────────────────────────────────────────────────
 const container = document.getElementById('canvas-container');
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer  = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x0d1117);
 container.appendChild(renderer.domElement);
 
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x0d1117, 80, 180);
+// ─── Scene & Camera ────────────────────────────────────────────────────────
+const scene  = new THREE.Scene();
+scene.fog    = new THREE.Fog(0x0d1117, 100, 220);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
-camera.position.set(0, 45, 70);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 55, 80);
 camera.lookAt(0, 0, 0);
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.minDistance = 10;
-controls.maxDistance = 150;
-controls.maxPolarAngle = Math.PI / 2.05;
+// ─── Controls ──────────────────────────────────────────────────────────────
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.08;
+controls.minDistance    = 10;
+controls.maxDistance    = 180;
+controls.maxPolarAngle  = Math.PI / 2.05;
 
 // ─── Lighting ──────────────────────────────────────────────────────────────
-const ambientLight = new THREE.AmbientLight(0x8090b0, 0.6);
-scene.add(ambientLight);
+scene.add(new THREE.AmbientLight(0x8090c0, 0.7));
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-dirLight.position.set(30, 60, 40);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
-dirLight.shadow.camera.near = 1;
-dirLight.shadow.camera.far = 200;
-dirLight.shadow.camera.left = -60;
-dirLight.shadow.camera.right = 60;
-dirLight.shadow.camera.top = 60;
-dirLight.shadow.camera.bottom = -60;
-scene.add(dirLight);
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(40, 80, 50);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -80, right: 80, top: 60, bottom: -60, near: 1, far: 250 });
+scene.add(sun);
 
-const fillLight = new THREE.DirectionalLight(0x4060ff, 0.3);
-fillLight.position.set(-30, 20, -20);
-scene.add(fillLight);
+scene.add(Object.assign(new THREE.DirectionalLight(0x4060ff, 0.25), { position: new THREE.Vector3(-30, 20, -20) }));
 
 // ─── Materials ─────────────────────────────────────────────────────────────
-const MAT_FLOOR   = new THREE.MeshLambertMaterial({ color: 0x2d3748 });
-const MAT_WALL    = new THREE.MeshLambertMaterial({ color: 0x1e293b, transparent: true, opacity: 0.4 });
-const MAT_RACK    = new THREE.MeshLambertMaterial({ color: 0x334155 });
-const MAT_BEAM    = new THREE.MeshLambertMaterial({ color: 0x1e3a5f });
-const MAT_EMPTY   = new THREE.MeshLambertMaterial({ color: 0x22c55e });
-const MAT_FULL    = new THREE.MeshLambertMaterial({ color: 0xef4444 });
-const MAT_HOVER   = new THREE.MeshLambertMaterial({ color: 0xfacc15 });
+const M_FLOOR  = new THREE.MeshLambertMaterial({ color: 0x2d3748 });
+const M_WALL   = new THREE.MeshLambertMaterial({ color: 0x1e293b, transparent: true, opacity: 0.35, side: THREE.FrontSide });
+const M_RACK   = new THREE.MeshLambertMaterial({ color: 0x4a5568 });
+const M_BEAM   = new THREE.MeshLambertMaterial({ color: 0x1e3a5f });
+const M_PALLET = new THREE.MeshLambertMaterial({ color: 0x92400e });
 
-// ─── Warehouse Layout Definition ───────────────────────────────────────────
-// Based on the 3D-printed model:
-// • Long rectangular floor (X axis = width, Z axis = depth)
-// • 3 rack zones separated by 2 main cross-aisles + perimeter aisles
-// • Each zone has double-sided rows of racks
-// • 3 vertical levels per rack
+const COLOR_EMPTY = 0x22c55e;
+const COLOR_FULL  = 0xef4444;
+const COLOR_HOVER = 0xfacc15;
 
-const FLOOR_W = 80;   // total warehouse width
-const FLOOR_D = 30;   // total warehouse depth
-const LEVEL_H = 2.2;  // height per pallet level
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function box(w, h, d, mat, x, y, z, shadow = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  if (shadow) { m.castShadow = true; m.receiveShadow = true; }
+  scene.add(m);
+  return m;
+}
+
+// ─── Warehouse Shell ───────────────────────────────────────────────────────
+const FW = 88;   // floor width  (X)
+const FD = 36;   // floor depth  (Z)
+const WH = 14;   // wall height
+
+// Floor
+box(FW + 6, 0.3, FD + 6, M_FLOOR, 0, -0.15, 0, false);
+
+// Grid
+const grid = new THREE.GridHelper(FW + 6, 22, 0x1e3a5f, 0x1e3a5f);
+grid.position.y = 0.02;
+scene.add(grid);
+
+// Walls (transparent so you can see inside)
+box(FW + 6, WH, 0.3, M_WALL,  0,        WH/2, -(FD/2+3));
+box(FW + 6, WH, 0.3, M_WALL,  0,        WH/2,  (FD/2+3));
+box(0.3,    WH, FD+6, M_WALL, -(FW/2+3), WH/2,  0);
+box(0.3,    WH, FD+6, M_WALL,  (FW/2+3), WH/2,  0);
+
+// ─── Rack Zone Layout ──────────────────────────────────────────────────────
+// From the photo: 3 main rack sections separated by 2 cross-aisles
+// Each section has two rows of racks facing each other across a narrow aisle
+// Model has ~15 columns across, split roughly 5 | 4 | (gap) | 3 | 5
+
+const SPOT_W  = 2.8;   // pallet bay width
+const SPOT_D  = 2.4;   // pallet depth
+const SPOT_H  = 1.8;   // load height
 const LEVELS  = 3;
-const SPOT_W  = 2.6;  // pallet width
-const SPOT_D  = 2.2;  // pallet depth
-const SPOT_H  = 1.6;  // pallet height (box on pallet)
-const RACK_T  = 0.18; // rack upright thickness
+const LEVEL_H = 2.6;   // floor-to-floor per level
+const UT      = 0.15;  // upright thickness
 
-// Zone definitions: [startX, startZ, cols, rowPairs, label]
-// rowPairs = number of back-to-back rack pairs (each pair = 2 rows facing the aisle)
+// Zone descriptor: { id, startX, cols, frontZ, label }
+// frontZ = Z centre of the front rack row face
+// Each zone gets TWO rows of racks: front row (facing -Z aisle) and back row (facing +Z aisle)
 const ZONES = [
-  { id: 'A', x: -36, z: -11, cols: 6, label: 'A' },
-  { id: 'B', x: -36, z:   0, cols: 6, label: 'B' },
-  { id: 'C', x: -14, z: -11, cols: 4, label: 'C' },
-  { id: 'D', x: -14, z:   0, cols: 4, label: 'D' },
-  { id: 'E', x:   4, z: -11, cols: 7, label: 'E' },
-  { id: 'F', x:   4, z:   0, cols: 7, label: 'F' },
-  { id: 'G', x:  26, z: -11, cols: 5, label: 'G' },
-  { id: 'H', x:  26, z:   0, cols: 5, label: 'H' },
+  // Section 1 (left) — 5 bays wide
+  { id: 'A', startX: -42, cols: 5, zFront: -12, zBack: -6,  label: 'A' },
+  // Section 2 — 4 bays wide
+  { id: 'B', startX: -18, cols: 4, zFront: -12, zBack: -6,  label: 'B' },
+  // Section 3a — 3 bays (right of centre gap)
+  { id: 'C', startX:   2, cols: 3, zFront: -12, zBack: -6,  label: 'C' },
+  // Section 3b — 5 bays (far right)
+  { id: 'D', startX:  18, cols: 5, zFront: -12, zBack: -6,  label: 'D' },
+
+  // Mirror rows on the south side of the main aisle
+  { id: 'E', startX: -42, cols: 5, zFront: 6,  zBack: 12,  label: 'E' },
+  { id: 'F', startX: -18, cols: 4, zFront: 6,  zBack: 12,  label: 'F' },
+  { id: 'G', startX:   2, cols: 3, zFront: 6,  zBack: 12,  label: 'G' },
+  { id: 'H', startX:  18, cols: 5, zFront: 6,  zBack: 12,  label: 'H' },
 ];
 
-// ─── Build Floor ───────────────────────────────────────────────────────────
-const floorGeo = new THREE.BoxGeometry(FLOOR_W + 4, 0.3, FLOOR_D + 4);
-const floor = new THREE.Mesh(floorGeo, MAT_FLOOR);
-floor.position.set(0, -0.15, 0);
-floor.receiveShadow = true;
-scene.add(floor);
+const skidSpots = [];
 
-// Grid lines on floor
-const gridHelper = new THREE.GridHelper(FLOOR_W + 4, 20, 0x1e3a5f, 0x1e3a5f);
-gridHelper.position.y = 0.01;
-scene.add(gridHelper);
+// Build a single rack row
+function buildRackRow(startX, cols, zCenter, facingSign) {
+  const rackDepth = SPOT_D * 0.85;
 
-// ─── Walls ─────────────────────────────────────────────────────────────────
-function makeWall(w, h, d, x, y, z) {
-  const geo = new THREE.BoxGeometry(w, h, d);
-  const mesh = new THREE.Mesh(geo, MAT_WALL);
-  mesh.position.set(x, y, z);
-  mesh.receiveShadow = true;
-  scene.add(mesh);
-}
-const WH = 10;
-makeWall(FLOOR_W + 4, WH, 0.3,  0,      WH/2, -(FLOOR_D/2+2));
-makeWall(FLOOR_W + 4, WH, 0.3,  0,      WH/2,  (FLOOR_D/2+2));
-makeWall(0.3, WH, FLOOR_D + 4, -(FLOOR_W/2+2), WH/2, 0);
-makeWall(0.3, WH, FLOOR_D + 4,  (FLOOR_W/2+2), WH/2, 0);
-
-// ─── Rack Structure Builder ─────────────────────────────────────────────────
-function buildRackRow(startX, startZ, cols, zDir, rowId) {
-  const group = new THREE.Group();
-
-  // Uprights
+  // Uprights — one per bay boundary
   for (let c = 0; c <= cols; c++) {
-    for (let lv = 0; lv <= LEVELS; lv++) {
-      const upGeo = new THREE.BoxGeometry(RACK_T, LEVEL_H, SPOT_D);
-      const up = new THREE.Mesh(upGeo, MAT_RACK);
-      up.position.set(startX + c * SPOT_W, lv * LEVEL_H + LEVEL_H / 2, startZ + zDir * SPOT_D / 2);
-      up.castShadow = true;
-      scene.add(up);
+    for (let lv = 0; lv < LEVELS; lv++) {
+      box(UT, LEVEL_H, rackDepth,
+          M_RACK,
+          startX + c * SPOT_W,
+          lv * LEVEL_H + LEVEL_H / 2,
+          zCenter);
     }
   }
 
-  // Horizontal beams per level
+  // Horizontal load beams per level
   for (let lv = 1; lv <= LEVELS; lv++) {
-    const beamGeo = new THREE.BoxGeometry(cols * SPOT_W, 0.12, 0.12);
-    const beam = new THREE.Mesh(beamGeo, MAT_BEAM);
-    beam.position.set(startX + (cols * SPOT_W) / 2, lv * LEVEL_H, startZ + zDir * SPOT_D / 2);
-    scene.add(beam);
-    // Back beam
-    const beam2 = beam.clone();
-    beam2.position.z = startZ + zDir * SPOT_D * 0.9;
-    scene.add(beam2);
+    const y = lv * LEVEL_H - 0.1;
+    // front beam
+    box(cols * SPOT_W, 0.14, 0.14, M_BEAM,
+        startX + cols * SPOT_W / 2, y, zCenter - rackDepth * 0.45 * facingSign);
+    // back beam
+    box(cols * SPOT_W, 0.14, 0.14, M_BEAM,
+        startX + cols * SPOT_W / 2, y, zCenter + rackDepth * 0.45 * facingSign);
   }
 }
 
-// ─── Skid Spot Builder ──────────────────────────────────────────────────────
-const skidSpots = [];
-
-function buildZone(zone) {
-  const { id, x, z, cols, label } = zone;
-  // Build rack structure for this row
-  buildRackRow(x, z, cols, -1, id);
-
+// Build interactive skid spots for a rack row
+function buildSpots(startX, cols, zCenter, rowLabel, facingSign) {
   for (let col = 0; col < cols; col++) {
     for (let lv = 0; lv < LEVELS; lv++) {
-      const locationId = `${label}${col + 1}-L${lv + 1}`;
+      const cx = startX + col * SPOT_W + SPOT_W / 2;
+      const cy = lv * LEVEL_H + 0.12 + SPOT_H / 2;
+      const cz = zCenter;
+      const locationId = `${rowLabel}${col + 1}-L${lv + 1}`;
 
-      // Pallet platform
-      const palletGeo = new THREE.BoxGeometry(SPOT_W - 0.3, 0.18, SPOT_D - 0.2);
-      const pallet = new THREE.Mesh(palletGeo, MAT_RACK);
-      pallet.position.set(
-        x + col * SPOT_W + SPOT_W / 2,
-        lv * LEVEL_H + 0.09,
-        z - SPOT_D / 2 + 0.05
+      // Pallet board
+      const pallet = new THREE.Mesh(
+        new THREE.BoxGeometry(SPOT_W - 0.3, 0.14, SPOT_D - 0.3),
+        M_PALLET
       );
+      pallet.position.set(cx, lv * LEVEL_H + 0.07, cz);
       pallet.castShadow = true;
       scene.add(pallet);
 
-      // Skid box (the interactive spot)
-      const boxGeo = new THREE.BoxGeometry(SPOT_W - 0.4, SPOT_H, SPOT_D - 0.35);
-      const box = new THREE.Mesh(boxGeo, MAT_EMPTY.clone());
-      box.position.set(
-        x + col * SPOT_W + SPOT_W / 2,
-        lv * LEVEL_H + 0.18 + SPOT_H / 2,
-        z - SPOT_D / 2 + 0.05
-      );
-      box.castShadow = true;
-      box.receiveShadow = true;
-
-      box.userData = {
-        locationId,
-        zone: label,
-        col: col + 1,
-        level: lv + 1,
-        isFull: false,
-        isSkidSpot: true,
-        originalColor: 0x22c55e,
-      };
-
-      scene.add(box);
-      skidSpots.push(box);
+      // Skid box (interactive)
+      const mat  = new THREE.MeshLambertMaterial({ color: COLOR_EMPTY });
+      const spot = new THREE.Mesh(new THREE.BoxGeometry(SPOT_W - 0.35, SPOT_H, SPOT_D - 0.35), mat);
+      spot.position.set(cx, cy, cz);
+      spot.castShadow    = true;
+      spot.receiveShadow = true;
+      spot.userData = { locationId, isFull: false, isSkidSpot: true };
+      scene.add(spot);
+      skidSpots.push(spot);
     }
   }
 }
 
-ZONES.forEach(buildZone);
+ZONES.forEach(zone => {
+  const { startX, cols, zFront, zBack, label } = zone;
+  const facingSign = zFront < 0 ? 1 : -1;
 
-// ─── Counter Update ─────────────────────────────────────────────────────────
+  buildRackRow(startX, cols, zFront, facingSign);
+  buildRackRow(startX, cols, zBack,  -facingSign);
+
+  buildSpots(startX, cols, zFront, label,       facingSign);
+  buildSpots(startX, cols, zBack,  label + "'", -facingSign);
+});
+
+// ─── Counters ──────────────────────────────────────────────────────────────
 function updateCounters() {
   const full  = skidSpots.filter(s => s.userData.isFull).length;
   const empty = skidSpots.length - full;
@@ -372,112 +361,81 @@ function updateCounters() {
 }
 updateCounters();
 
-// ─── Interaction ────────────────────────────────────────────────────────────
+// ─── Raycasting / Interaction ───────────────────────────────────────────────
 const raycaster = new THREE.Raycaster();
 const mouse     = new THREE.Vector2();
 const tooltip   = document.getElementById('tooltip');
-let hoveredSpot  = null;
-let selectedSpot = null;
+let hovered     = null;
 
-function getSpotColor(spot) {
-  return spot.userData.isFull ? 0xef4444 : 0x22c55e;
-}
+function spotColor(spot) { return spot.userData.isFull ? COLOR_FULL : COLOR_EMPTY; }
 
 renderer.domElement.addEventListener('mousemove', e => {
   mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
   raycaster.setFromCamera(mouse, camera);
   const hits = raycaster.intersectObjects(skidSpots);
 
-  // Reset previous hover
-  if (hoveredSpot && hoveredSpot !== selectedSpot) {
-    hoveredSpot.material.color.setHex(getSpotColor(hoveredSpot));
-    hoveredSpot.material.emissive?.setHex(0x000000);
-  }
+  if (hovered) { hovered.material.color.setHex(spotColor(hovered)); hovered = null; }
 
-  if (hits.length > 0) {
-    hoveredSpot = hits[0].object;
-    if (hoveredSpot !== selectedSpot) {
-      hoveredSpot.material.color.setHex(0xfacc15);
-    }
-    const d = hoveredSpot.userData;
-    document.getElementById('tt-loc').textContent = d.locationId;
-    const statusEl = document.getElementById('tt-status');
-    statusEl.textContent = d.isFull ? 'FULL' : 'EMPTY';
-    statusEl.className   = 'status ' + (d.isFull ? 'full' : 'empty');
+  if (hits.length) {
+    hovered = hits[0].object;
+    hovered.material.color.setHex(COLOR_HOVER);
+    const d = hovered.userData;
+    document.getElementById('tt-loc').textContent    = d.locationId;
+    const st = document.getElementById('tt-status');
+    st.textContent = d.isFull ? 'FULL' : 'EMPTY';
+    st.className   = 'status ' + (d.isFull ? 'full' : 'empty');
     tooltip.style.display = 'block';
-    tooltip.style.left    = (e.clientX + 14) + 'px';
-    tooltip.style.top     = (e.clientY - 10) + 'px';
+    tooltip.style.left    = (e.clientX + 16) + 'px';
+    tooltip.style.top     = (e.clientY - 12) + 'px';
     renderer.domElement.style.cursor = 'pointer';
   } else {
-    hoveredSpot = null;
     tooltip.style.display = 'none';
     renderer.domElement.style.cursor = 'default';
   }
 });
 
-renderer.domElement.addEventListener('click', e => {
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(skidSpots);
-  if (hits.length > 0) {
-    const spot = hits[0].object;
-    spot.userData.isFull = !spot.userData.isFull;
-    spot.material.color.setHex(getSpotColor(spot));
-    updateCounters();
-
-    // Update tooltip
-    const statusEl = document.getElementById('tt-status');
-    statusEl.textContent = spot.userData.isFull ? 'FULL' : 'EMPTY';
-    statusEl.className   = 'status ' + (spot.userData.isFull ? 'full' : 'empty');
-  }
+renderer.domElement.addEventListener('click', () => {
+  if (!hovered) return;
+  hovered.userData.isFull = !hovered.userData.isFull;
+  hovered.material.color.setHex(spotColor(hovered));
+  const st = document.getElementById('tt-status');
+  st.textContent = hovered.userData.isFull ? 'FULL' : 'EMPTY';
+  st.className   = 'status ' + (hovered.userData.isFull ? 'full' : 'empty');
+  updateCounters();
 });
 
-// ─── View Presets ───────────────────────────────────────────────────────────
-function setView(v) {
-  if (v === 'top') {
-    camera.position.set(0, 90, 0.01);
-    camera.lookAt(0, 0, 0);
-  } else if (v === 'front') {
-    camera.position.set(0, 12, 70);
-    camera.lookAt(0, 5, 0);
-  } else if (v === 'iso') {
-    camera.position.set(50, 45, 55);
-    camera.lookAt(0, 0, 0);
-  }
+// ─── View buttons ──────────────────────────────────────────────────────────
+function moveCam(x, y, z, tx = 0, ty = 3, tz = 0) {
+  camera.position.set(x, y, z);
+  controls.target.set(tx, ty, tz);
   controls.update();
 }
-
-function resetAll() {
-  skidSpots.forEach(s => {
-    s.userData.isFull = false;
-    s.material.color.setHex(0x22c55e);
-  });
+document.getElementById('btn-top').onclick   = () => moveCam(0, 100, 0.01);
+document.getElementById('btn-front').onclick = () => moveCam(0, 14, 85);
+document.getElementById('btn-iso').onclick   = () => moveCam(60, 55, 65);
+document.getElementById('btn-reset').onclick = () => {
+  skidSpots.forEach(s => { s.userData.isFull = false; s.material.color.setHex(COLOR_EMPTY); });
   updateCounters();
-}
-
-function fillAll() {
-  skidSpots.forEach(s => {
-    s.userData.isFull = true;
-    s.material.color.setHex(0xef4444);
-  });
+};
+document.getElementById('btn-fill').onclick  = () => {
+  skidSpots.forEach(s => { s.userData.isFull = true; s.material.color.setHex(COLOR_FULL); });
   updateCounters();
-}
+};
 
-// ─── Resize ─────────────────────────────────────────────────────────────────
+// ─── Resize ────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ─── Animate ────────────────────────────────────────────────────────────────
-function animate() {
+// ─── Render loop ──────────────────────────────────────────────────────────
+(function animate() {
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
-}
-animate();
+})();
 </script>
 </body>
 </html>
