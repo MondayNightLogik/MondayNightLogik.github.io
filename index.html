@@ -9,7 +9,6 @@
     body { background: #0d1117; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     #app { width: 100vw; height: 100vh; position: relative; }
 
-    /* ── HUD ── */
     #hud {
       position: absolute; top: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-between;
@@ -19,9 +18,8 @@
       z-index: 10; pointer-events: none;
     }
     #hud h1 { color: #e2e8ff; font-size: 1rem; font-weight: 600; letter-spacing: 1px; }
-    #hud span { color: #555; font-size: 0.72rem; }
+    #hud-hint { color: #555; font-size: 0.72rem; }
 
-    /* ── Tooltip ── */
     #tooltip {
       position: absolute; display: none; z-index: 20;
       background: rgba(8,8,30,0.96); border: 1px solid rgba(100,180,255,0.35);
@@ -33,7 +31,6 @@
     #tt-status.full  { color: #f87171; }
     #tt-hint   { color: #444; font-size: 0.68rem; margin-top: 4px; }
 
-    /* ── Left sidebar (view controls) ── */
     #sidebar {
       position: absolute; top: 56px; left: 12px;
       display: flex; flex-direction: column; gap: 5px; z-index: 10;
@@ -45,10 +42,8 @@
       text-align: left;
     }
     .btn:hover { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
-    .btn.danger:hover { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #fca5a5; }
     .btn.active { background: rgba(59,130,246,0.35); border-color: #3b82f6; color: #fff; }
 
-    /* ── Legend ── */
     #legend {
       position: absolute; top: 56px; right: 12px; z-index: 5;
       background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.08);
@@ -60,7 +55,16 @@
     .li { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; font-size: 0.74rem; color: #aaa; }
     .sw { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
 
-    /* ── Counter bar ── */
+    /* drag-mode banner */
+    #drag-banner {
+      display: none;
+      position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+      background: rgba(59,130,246,0.25); border: 1px solid #3b82f6;
+      color: #93c5fd; font-size: 0.75rem; padding: 6px 16px; border-radius: 6px;
+      z-index: 10; pointer-events: none; white-space: nowrap;
+    }
+    #drag-banner.show { display: block; }
+
     #bar {
       position: absolute; bottom: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: center; gap: 36px;
@@ -76,62 +80,46 @@
     #st .n { color: #93c5fd; } #st .l { color: #1e40af; }
     .dv { width: 1px; height: 34px; background: rgba(255,255,255,0.08); }
 
-    /* ── Edit Panel ── */
+    /* Edit Panel */
     #edit-panel {
       position: absolute; top: 0; right: -320px; bottom: 0;
-      width: 320px;
-      background: rgba(8,8,22,0.97);
+      width: 320px; background: rgba(8,8,22,0.97);
       border-left: 1px solid rgba(255,255,255,0.1);
-      z-index: 15;
-      display: flex; flex-direction: column;
+      z-index: 15; display: flex; flex-direction: column;
       transition: right 0.3s ease;
     }
     #edit-panel.open { right: 0; }
-
     #edit-header {
       padding: 14px 16px 10px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex; align-items: center; justify-content: space-between;
       flex-shrink: 0;
     }
-    #edit-header h2 { color: #e2e8ff; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; }
-    #edit-close {
-      background: none; border: none; color: #666; font-size: 1.2rem;
-      cursor: pointer; padding: 0 4px; line-height: 1;
-    }
+    #edit-header h2 { color: #e2e8ff; font-size: 0.9rem; font-weight: 600; }
+    #edit-close { background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; padding: 0 4px; }
     #edit-close:hover { color: #ccc; }
 
     #edit-add-row {
       margin: 10px 12px 6px;
       background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
       color: #4ade80; padding: 7px 14px; border-radius: 6px;
-      font-size: 0.75rem; cursor: pointer; transition: all 0.14s;
-      flex-shrink: 0;
+      font-size: 0.75rem; cursor: pointer; transition: all 0.14s; flex-shrink: 0;
     }
     #edit-add-row:hover { background: rgba(34,197,94,0.25); }
 
-    #row-list {
-      flex: 1; overflow-y: auto; padding: 4px 0;
-    }
+    #row-list { flex: 1; overflow-y: auto; padding: 4px 0; }
     #row-list::-webkit-scrollbar { width: 4px; }
-    #row-list::-webkit-scrollbar-track { background: transparent; }
     #row-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
     .row-item {
-      padding: 8px 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      cursor: pointer;
-      transition: background 0.1s;
+      padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer; transition: background 0.1s;
     }
     .row-item:hover { background: rgba(255,255,255,0.03); }
     .row-item.selected { background: rgba(59,130,246,0.12); border-left: 2px solid #3b82f6; }
-
-    .row-item-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 4px;
-    }
+    .row-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
     .row-label { color: #93c5fd; font-size: 0.78rem; font-weight: 600; }
-    .row-spot-count { color: #555; font-size: 0.68rem; }
+    .row-meta  { color: #555; font-size: 0.65rem; }
     .row-actions { display: flex; gap: 4px; }
     .row-actions button {
       background: none; border: 1px solid rgba(255,255,255,0.1);
@@ -141,24 +129,13 @@
     .row-actions .edit-btn:hover { border-color: #3b82f6; color: #93c5fd; }
     .row-actions .del-btn:hover  { border-color: #ef4444; color: #f87171; }
     .row-actions .dup-btn:hover  { border-color: #a78bfa; color: #c4b5fd; }
+    .col-pills { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+    .col-pill { background: rgba(255,255,255,0.06); border-radius: 3px; padding: 1px 6px; font-size: 0.65rem; color: #888; }
 
-    .col-pills { display: flex; flex-wrap: wrap; gap: 3px; }
-    .col-pill {
-      background: rgba(255,255,255,0.06); border-radius: 3px;
-      padding: 1px 6px; font-size: 0.65rem; color: #888;
-    }
-
-    /* Row editor (inline) */
-    .row-editor {
-      background: rgba(15,15,40,0.8);
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding: 10px 12px;
-    }
+    .row-editor { background: rgba(15,15,40,0.8); border-top: 1px solid rgba(255,255,255,0.06); padding: 10px 12px; }
     .editor-title { color: #7dd3fc; font-size: 0.72rem; font-weight: 600; margin-bottom: 8px; }
     .col-editors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-    .col-editor {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-    }
+    .col-editor { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .col-editor label { color: #666; font-size: 0.6rem; }
     .col-editor input {
       width: 42px; background: rgba(255,255,255,0.06);
@@ -166,17 +143,10 @@
       color: #e2e8ff; font-size: 0.8rem; text-align: center; padding: 3px 0;
     }
     .col-editor input:focus { outline: none; border-color: #3b82f6; }
-    .col-editor .del-col {
-      background: none; border: none; color: #555; font-size: 0.7rem;
-      cursor: pointer; padding: 0;
-    }
+    .col-editor .del-col { background: none; border: none; color: #555; font-size: 0.7rem; cursor: pointer; padding: 0; }
     .col-editor .del-col:hover { color: #ef4444; }
-
     .editor-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-    .editor-btn {
-      font-size: 0.68rem; padding: 4px 10px; border-radius: 4px; cursor: pointer;
-      border: 1px solid; transition: all 0.12s;
-    }
+    .editor-btn { font-size: 0.68rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; border: 1px solid; transition: all 0.12s; }
     .editor-btn.add-col { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
     .editor-btn.add-col:hover { background: rgba(59,130,246,0.3); }
     .editor-btn.apply { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #4ade80; }
@@ -197,7 +167,7 @@
 <div id="app">
   <div id="hud">
     <h1>WAREHOUSE 3D MAP</h1>
-    <span>Left-drag: rotate &nbsp;|&nbsp; Scroll: zoom &nbsp;|&nbsp; Right-drag: pan &nbsp;|&nbsp; Click spot: toggle full/empty</span>
+    <span id="hud-hint">Left-drag: rotate &nbsp;|&nbsp; Scroll: zoom &nbsp;|&nbsp; Right-drag: pan &nbsp;|&nbsp; Click spot: toggle full/empty</span>
   </div>
 
   <div id="tooltip">
@@ -205,6 +175,8 @@
     <div id="tt-status"></div>
     <div id="tt-hint">Click to toggle</div>
   </div>
+
+  <div id="drag-banner">✥ MOVE MODE — Click &amp; drag any row left/right &nbsp;|&nbsp; Snaps to 1 m grid &nbsp;|&nbsp; Orbit still works when not dragging</div>
 
   <div id="sidebar">
     <button class="btn" id="vTop">Top View</button>
@@ -219,15 +191,15 @@
     <div class="li"><div class="sw" style="background:#22c55e"></div>Empty</div>
     <div class="li"><div class="sw" style="background:#ef4444"></div>Full</div>
     <div class="li"><div class="sw" style="background:#facc15"></div>Hovered</div>
+    <div class="li"><div class="sw" style="background:#60a5fa"></div>Selected row</div>
     <div class="li"><div class="sw" style="background:#4a5568"></div>Rack</div>
   </div>
 
   <button id="edit-toggle">✏ Edit Layout</button>
 
-  <!-- Edit Panel -->
   <div id="edit-panel">
     <div id="edit-header">
-      <h2>Edit Warehouse Layout</h2>
+      <h2>Edit Layout</h2>
       <button id="edit-close">✕</button>
     </div>
     <button id="edit-add-row">+ Add Row</button>
@@ -249,17 +221,16 @@
 (function () {
   'use strict';
 
-  // ── Renderer ───────────────────────────────────────────────────────────
-  var app      = document.getElementById('app');
+  // ── Renderer ────────────────────────────────────────────────────────────
+  var app = document.getElementById('app');
   var renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
   renderer.setClearColor(0x0d1117, 1);
   app.appendChild(renderer.domElement);
 
   var scene  = new THREE.Scene();
-  scene.fog  = new THREE.Fog(0x0d1117, 200, 500);
+  scene.fog  = new THREE.Fog(0x0d1117, 300, 600);
   var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 800);
 
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -269,22 +240,16 @@
   controls.maxDistance   = 500;
   controls.maxPolarAngle = Math.PI / 2.05;
 
-  // ── Lighting ───────────────────────────────────────────────────────────
+  // ── Lighting ────────────────────────────────────────────────────────────
   scene.add(new THREE.AmbientLight(0x7080a0, 0.9));
   var sun = new THREE.DirectionalLight(0xffffff, 1.1);
   sun.position.set(50, 150, 30);
-  sun.castShadow = true;
-  sun.shadow.mapSize.width  = 2048;
-  sun.shadow.mapSize.height = 2048;
-  sun.shadow.camera.left   = -250; sun.shadow.camera.right  =  250;
-  sun.shadow.camera.top    =  60;  sun.shadow.camera.bottom = -60;
-  sun.shadow.camera.far    = 500;
   scene.add(sun);
 
-  // ── Colours & materials ────────────────────────────────────────────────
-  var C_EMPTY = 0x22c55e, C_FULL = 0xef4444, C_HOVER = 0xfacc15;
-  var mFloor   = new THREE.MeshLambertMaterial({ color: 0x1e2530 });
-  var mWall    = new THREE.MeshLambertMaterial({ color: 0x1a2235, transparent: true, opacity: 0.2 });
+  // ── Materials & colours ─────────────────────────────────────────────────
+  var C_EMPTY = 0x22c55e, C_FULL = 0xef4444, C_HOVER = 0xfacc15, C_SEL = 0x60a5fa;
+  var mFloor   = new THREE.MeshLambertMaterial({ color: 0x1a2030 });
+  var mWall    = new THREE.MeshLambertMaterial({ color: 0x1a2235, transparent: true, opacity: 0.15 });
   var mUpright = new THREE.MeshLambertMaterial({ color: 0x4a5568 });
   var mBeam    = new THREE.MeshLambertMaterial({ color: 0x1e3a5f });
   var mPallet  = new THREE.MeshLambertMaterial({ color: 0x5c3d1a });
@@ -296,26 +261,19 @@
     return geoCache[k];
   }
 
-  // ── Warehouse dims ─────────────────────────────────────────────────────
-  var SPOT_W    = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
-  var LVL_H     = 2.0, AISLE = 4.5;
-  var BACK_GAP  = 0.22;                    // gap between backs of a paired row
-  var PAIR_W    = BAY_W * 2 + BACK_GAP;   // total X width of one pair
-  var PAIR_P    = PAIR_W + AISLE;          // pair centre-to-centre pitch
-  var SPOT_H    = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
+  // ── Warehouse constants ─────────────────────────────────────────────────
+  var SPOT_W = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
+  var LVL_H  = 2.0;
+  var BACK_GAP = 0.22;
+  var PAIR_W = BAY_W*2 + BACK_GAP;   // width of a back-to-back pair
+  var AISLE  = 4.5;
+  var PAIR_P = PAIR_W + AISLE;        // default pair pitch
+  var SPOT_H = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
+  var GRID_SNAP = 1.0;   // snap rows to 1 m grid when dragging
 
-  // Pair layout: BACKS touch at pair centre, AISLES run between adjacent pairs.
-  //   AISLE | [Row_A face | back·back | Row_B face] | AISLE |
-  // X centre of row ri:
-  function rowX(ri, firstPairX) {
-    var pairIdx = Math.floor(ri / 2);
-    var side    = ri % 2;   // 0 = west row (face left), 1 = east row (face right)
-    var pc      = firstPairX + pairIdx * PAIR_P;
-    return pc + (side === 0 ? -(BACK_GAP/2 + BAY_W/2) : (BACK_GAP/2 + BAY_W/2));
-  }
-
-  // ── Layout data (mutable) ──────────────────────────────────────────────
-  // Each row: { levels: [n, n, ...] }  — one entry per column (N→S)
+  // ── Layout data ─────────────────────────────────────────────────────────
+  // Each row: { levels:[n,n,...], x:float }
+  // x = absolute world X of the row centre (user-controllable)
   var DEFAULT_TYPES = {
     A: [4,5,5,6],
     B: [4,5,5,6,6,5],
@@ -326,249 +284,359 @@
 
   var layoutData = [];
   ROW_GROUPS.forEach(function(g){
-    for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice() });
+    for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice(), x: null });
   });
 
-  // ── Scene groups ───────────────────────────────────────────────────────
-  var staticGroup = new THREE.Group();  // floor, walls, grid (rebuilt on resize only)
-  var rackGroup   = new THREE.Group();  // all rack + spot meshes (rebuilt on layout change)
+  // Compute initial X positions using back-to-back pair formula
+  function initPositions(){
+    var nRows  = layoutData.length;
+    var nPairs = Math.ceil(nRows / 2);
+    var wW     = (nPairs-1)*PAIR_P + PAIR_W;
+    var fpX    = -wW/2 + PAIR_W/2;  // centre of pair 0
+    layoutData.forEach(function(row, ri){
+      if(row.x !== null) return;
+      var pi   = Math.floor(ri/2);
+      var side = ri % 2;
+      var pc   = fpX + pi * PAIR_P;
+      row.x = pc + (side===0 ? -(BACK_GAP/2+BAY_W/2) : (BACK_GAP/2+BAY_W/2));
+    });
+  }
+  initPositions();
+
+  // ── Scene groups ────────────────────────────────────────────────────────
+  var staticGroup = new THREE.Group();
+  var rackGroup   = new THREE.Group();
   scene.add(staticGroup);
   scene.add(rackGroup);
 
-  // ── Static scene (floor + walls) ──────────────────────────────────────
-  function buildStatic() {
-    while(staticGroup.children.length) staticGroup.remove(staticGroup.children[0]);
-
-    var nRows  = layoutData.length;
-    var nPairs = Math.ceil(nRows / 2);
-    var maxC   = Math.max.apply(null, layoutData.map(function(r){return r.levels.length;}));
-    var wW = Math.max(0, (nPairs - 1) * PAIR_P + PAIR_W);
+  // ── Compute scene bounds from current row x positions ───────────────────
+  function computeBounds(){
+    var minX = Infinity, maxX = -Infinity, maxC = 0;
+    layoutData.forEach(function(row){
+      minX = Math.min(minX, row.x - BAY_W);
+      maxX = Math.max(maxX, row.x + BAY_W);
+      maxC = Math.max(maxC, row.levels.length);
+    });
+    if(!isFinite(minX)){ minX=-20; maxX=20; }
+    var wW = maxX - minX;
     var wD = maxC * COL_D;
-    var firstPairX = -wW/2 + PAIR_W/2;   // X centre of pair 0
-    var x0 = firstPairX - BAY_W - BACK_GAP/2;  // west edge (row 0 outer edge)
-    var z0 = -wD/2;
-
-    function sm(w,h,d,mat,x,y,z){
-      var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); staticGroup.add(m); return m;
-    }
-
-    sm(wW+20,0.2,wD+20,mFloor,0,-0.1,z0+wD/2);
-    var grid=new THREE.GridHelper(Math.max(wW,wD)+20,50,0x1a2a3a,0x1a2a3a);
-    grid.position.set(0,0.01,z0+wD/2);
-    staticGroup.add(grid);
-
-    // Yellow aisle stripes — one between each adjacent pair of back-to-back rows
-    var mAisle = new THREE.MeshLambertMaterial({color:0xd4a017});
-    for(var pi=0; pi<nPairs-1; pi++){
-      var aisleX = firstPairX + (pi + 0.5) * PAIR_P;  // midpoint between pair pi and pair pi+1
-      var stripe = new THREE.Mesh(geo(AISLE-0.3, 0.02, wD+20), mAisle);
-      stripe.position.set(aisleX, 0.01, z0+wD/2);
-      staticGroup.add(stripe);
-    }
-    // Also stripe on the outer aisles (west of pair 0 and east of last pair)
-    var mAisle2 = new THREE.MeshLambertMaterial({color:0xd4a017});
-    var outerW = AISLE - 0.3;
-    var stripeW = new THREE.Mesh(geo(outerW, 0.02, wD+20), mAisle2);
-    stripeW.position.set(firstPairX - PAIR_P/2, 0.01, z0+wD/2);
-    staticGroup.add(stripeW);
-    var stripeE = new THREE.Mesh(geo(outerW, 0.02, wD+20), mAisle2);
-    stripeE.position.set(firstPairX + (nPairs-0.5)*PAIR_P, 0.01, z0+wD/2);
-    staticGroup.add(stripeE);
-
-    var WH=maxC*LVL_H+4;
-    sm(wW+20,WH,0.3,mWall,0,WH/2,z0-2);
-    sm(wW+20,WH,0.3,mWall,0,WH/2,z0+wD+2);
-    sm(0.3,WH,wD+20,mWall,-wW/2-2,WH/2,z0+wD/2);
-    sm(0.3,WH,wD+20,mWall, wW/2+2,WH/2,z0+wD/2);
-
-    return { wW:wW, wD:wD, x0:x0, z0:z0, firstPairX:firstPairX };
+    return { minX:minX, maxX:maxX, cx:(minX+maxX)/2, wW:wW, wD:wD, maxC:maxC, z0:-wD/2 };
   }
 
-  // ── Rack + skid spots ──────────────────────────────────────────────────
-  var skids = [];
+  // ── Build floor + grid + walls ──────────────────────────────────────────
+  function buildStatic(b){
+    while(staticGroup.children.length) staticGroup.remove(staticGroup.children[0]);
+    var pad = 12;
+    var fW = b.wW + pad*2, fD = b.wD + pad*2;
+    var cx = b.cx, cz = b.z0 + b.wD/2;
 
-  function buildRacks(dims) {
-    // Clear previous
+    // Floor slab
+    var fl = new THREE.Mesh(geo(fW, 0.2, fD), mFloor);
+    fl.position.set(cx, -0.1, cz);
+    staticGroup.add(fl);
+
+    // Fine grid — every 1 m (light teal lines)
+    var gs = Math.ceil(Math.max(fW, fD)) + 20;
+    var g1 = new THREE.GridHelper(gs, gs, 0x1e3a4a, 0x1e3a4a);
+    g1.position.set(cx, 0.01, cz);
+    staticGroup.add(g1);
+
+    // Coarse grid — every 5 m (brighter)
+    var g5 = new THREE.GridHelper(gs, Math.ceil(gs/5), 0x2a5a7a, 0x2a5a7a);
+    g5.position.set(cx, 0.02, cz);
+    staticGroup.add(g5);
+
+    // Walls
+    var WH = b.maxC * LVL_H + 4;
+    function wall(w,h,d,x,y,z){ var m=new THREE.Mesh(geo(w,h,d),mWall); m.position.set(x,y,z); staticGroup.add(m); }
+    wall(fW, WH, 0.3, cx, WH/2, b.z0-2);
+    wall(fW, WH, 0.3, cx, WH/2, b.z0+b.wD+2);
+    wall(0.3, WH, fD, b.minX-pad, WH/2, cz);
+    wall(0.3, WH, fD, b.maxX+pad, WH/2, cz);
+  }
+
+  // ── Build racks ─────────────────────────────────────────────────────────
+  var skids     = [];
+  var rowGroups = [];   // one THREE.Group per row
+
+  function buildRacks(b){
     while(rackGroup.children.length) rackGroup.remove(rackGroup.children[0]);
-    skids = [];
+    skids     = [];
+    rowGroups = [];
 
-    var x0=dims.x0, z0=dims.z0;
-    var spotGeo_   = geo(SPOT_W-0.12, SPOT_H, SPOT_D);
-    var palletGeo_ = geo(SPOT_W-0.08, 0.09,   SPOT_D);
-
-    function rm(w,h,d,mat,x,y,z){
-      var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); rackGroup.add(m); return m;
-    }
-
-    // Draw a thin back-panel inside each pair (where the backs of the two rows meet)
-    var nPairs2 = Math.ceil(layoutData.length/2);
-    for(var pi=0; pi<nPairs2; pi++){
-      var rowA = layoutData[pi*2];
-      var rowB = layoutData[pi*2+1];
-      if(!rowA) continue;
-      var levelsA = rowA.levels, levelsB = rowB ? rowB.levels : rowA.levels;
-      var maxLevels = Math.max(
-        Math.max.apply(null, levelsA),
-        Math.max.apply(null, levelsB));
-      var panH    = maxLevels * LVL_H;
-      var maxCols = Math.max(levelsA.length, levelsB.length);
-      var panX    = dims.firstPairX + pi * PAIR_P;  // pair centre = where backs meet
-      rm(BACK_GAP, panH, maxCols*COL_D, mUpright, panX, panH/2, dims.z0+maxCols*COL_D/2);
-    }
-
-    // Row number sign function (canvas sprite)
-    function makeRowLabel(text, x, z) {
-      var canvas = document.createElement('canvas');
-      canvas.width = 128; canvas.height = 64;
-      var ctx = canvas.getContext('2d');
-      ctx.fillStyle = 'rgba(0,0,0,0)';
-      ctx.fillRect(0,0,128,64);
-      ctx.fillStyle = '#facc15';
-      ctx.roundRect(4,4,120,56,10);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 34px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, 64, 34);
-      var tex = new THREE.CanvasTexture(canvas);
-      var mat = new THREE.SpriteMaterial({map:tex, depthTest:false});
-      var spr = new THREE.Sprite(mat);
-      spr.scale.set(2.5, 1.25, 1);
-      spr.position.set(x, 1.5, z);
-      rackGroup.add(spr);
-    }
+    var z0 = b.z0;
 
     layoutData.forEach(function(row, ri){
+      // Each row lives in its own Group; position.x = row.x
+      var rg = new THREE.Group();
+      rg.userData.rowIndex = ri;
+      rg.position.x = row.x;
+      rackGroup.add(rg);
+      rowGroups.push(rg);
+
       var cols   = row.levels;
-      var rx     = rowX(ri, dims.firstPairX);
-      var rowNum = ri+1;
+      var rowNum = ri + 1;
 
-      // Row number label at south end (front of aisle face)
-      makeRowLabel('R'+rowNum, rx, dims.z0 + cols.length*COL_D + 1.5);
-
-      // Uprights
-      for(var ci=0;ci<=cols.length;ci++){
-        var uz = z0+ci*COL_D;
-        var lH = ci>0          ? cols[ci-1]*LVL_H : 0;
-        var rH = ci<cols.length? cols[ci]*LVL_H   : 0;
-        var upH= Math.max(lH,rH);
-        if(!upH) continue;
-        rm(UT,upH,UT,mUpright, rx-SPOT_W/2, upH/2, uz);
-        rm(UT,upH,UT,mUpright, rx+SPOT_W/2, upH/2, uz);
+      function rm(w,h,d,mat,x,y,z){
+        var m = new THREE.Mesh(geo(w,h,d), mat);
+        m.position.set(x,y,z);
+        rg.add(m);
+        return m;
       }
 
-      cols.forEach(function(levels,ci){
-        var cz   = z0+ci*COL_D;
-        var midZ = cz+COL_D/2;
+      // Uprights (X coords relative to row centre = 0)
+      for(var ci=0; ci<=cols.length; ci++){
+        var uz = z0 + ci*COL_D;
+        var lH = ci>0            ? cols[ci-1]*LVL_H : 0;
+        var rH = ci<cols.length  ? cols[ci]*LVL_H   : 0;
+        var upH = Math.max(lH,rH);
+        if(!upH) continue;
+        rm(UT, upH, UT, mUpright, -SPOT_W/2, upH/2, uz);
+        rm(UT, upH, UT, mUpright,  SPOT_W/2, upH/2, uz);
+      }
 
-        for(var lv=1;lv<=levels;lv++){
-          var by=lv*LVL_H-0.08;
-          rm(BAY_W,0.09,0.09,mBeam,rx,by,cz);
-          rm(BAY_W,0.09,0.09,mBeam,rx,by,cz+COL_D);
+      // Beams + skid spots
+      cols.forEach(function(levels, ci){
+        var cz   = z0 + ci*COL_D;
+        var midZ = cz + COL_D/2;
+
+        for(var lv=1; lv<=levels; lv++){
+          var by = lv*LVL_H - 0.08;
+          rm(BAY_W, 0.09, 0.09, mBeam, 0, by, cz);
+          rm(BAY_W, 0.09, 0.09, mBeam, 0, by, cz+COL_D);
         }
-        for(var lv=0;lv<levels;lv++){
-          var sy=lv*LVL_H+0.09+SPOT_H/2;
-          var py=lv*LVL_H+0.045;
+        for(var lv=0; lv<levels; lv++){
+          var sy = lv*LVL_H + 0.09 + SPOT_H/2;
+          var py = lv*LVL_H + 0.045;
           ['A','B'].forEach(function(side){
-            var sx = rx+(side==='A'?-SPOT_W/2:SPOT_W/2);
-            var locId='R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
-            var pm=new THREE.Mesh(palletGeo_,mPallet);
-            pm.position.set(sx,py,midZ); rackGroup.add(pm);
-            var mat=new THREE.MeshLambertMaterial({color:C_EMPTY});
-            var sp=new THREE.Mesh(spotGeo_,mat);
-            sp.position.set(sx,sy,midZ);
-            sp.castShadow=sp.receiveShadow=true;
-            sp.userData={locId:locId,isFull:false,row:rowNum,col:ci+1,level:lv+1,side:side};
-            rackGroup.add(sp);
+            var sx = side==='A' ? -SPOT_W/2 : SPOT_W/2;
+            var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
+            var pm = new THREE.Mesh(geo(SPOT_W-0.08, 0.09, SPOT_D), mPallet);
+            pm.position.set(sx, py, midZ);
+            rg.add(pm);
+            var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
+            var sp  = new THREE.Mesh(geo(SPOT_W-0.12, SPOT_H, SPOT_D), mat);
+            sp.position.set(sx, sy, midZ);
+            sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1, side:side };
+            rg.add(sp);
             skids.push(sp);
           });
         }
       });
+
+      // Row number label (sprite, always faces camera)
+      makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_D + 2.0);
     });
   }
 
-  // ── Full rebuild ───────────────────────────────────────────────────────
-  var dims;
-  function rebuild() {
-    dims = buildStatic();
-    buildRacks(dims);
+  function makeRowLabel(parent, text, x, y, z){
+    var cv = document.createElement('canvas');
+    cv.width=128; cv.height=64;
+    var ctx = cv.getContext('2d');
+    ctx.clearRect(0,0,128,64);
+    ctx.fillStyle='#facc15';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(4,4,120,56,10);
+    else ctx.rect(4,4,120,56);
+    ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.font='bold 30px Arial';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(text,64,34);
+    var tex = new THREE.CanvasTexture(cv);
+    var spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
+    spr.scale.set(2.4, 1.2, 1);
+    spr.position.set(x,y,z);
+    parent.add(spr);
+  }
+
+  // ── Full rebuild ────────────────────────────────────────────────────────
+  var bounds;
+  function rebuild(){
+    bounds = computeBounds();
+    buildStatic(bounds);
+    buildRacks(bounds);
     updateCounters();
     renderRowList();
   }
   rebuild();
 
-  // Camera initial position
-  var midX=0, midZ=dims.z0+dims.wD/2;
-  controls.target.set(midX,5,midZ);
-  camera.position.set(midX,120,midZ+120);
+  // Initial camera
+  var midZ = bounds.z0 + bounds.wD/2;
+  controls.target.set(bounds.cx, 5, midZ);
+  camera.position.set(bounds.cx, 120, midZ+130);
   controls.update();
 
-  // ── Counters ───────────────────────────────────────────────────────────
+  // ── Counters ────────────────────────────────────────────────────────────
   function updateCounters(){
-    var full=skids.filter(function(s){return s.userData.isFull;}).length;
-    document.getElementById('ce').textContent=skids.length-full;
-    document.getElementById('cf').textContent=full;
-    document.getElementById('ct').textContent=skids.length;
+    var full = skids.filter(function(s){ return s.userData.isFull; }).length;
+    document.getElementById('ce').textContent = skids.length - full;
+    document.getElementById('cf').textContent = full;
+    document.getElementById('ct').textContent = skids.length;
   }
 
-  // ── Raycasting ─────────────────────────────────────────────────────────
-  var raycaster=new THREE.Raycaster(), mouse=new THREE.Vector2(), hovered=null;
-  var tooltip=document.getElementById('tooltip');
-  function spotCol(s){return s.userData.isFull?C_FULL:C_EMPTY;}
+  // ── Row highlight helpers ────────────────────────────────────────────────
+  var hlRow = null;
+  var hlSaved = [];
 
-  renderer.domElement.addEventListener('mousemove',function(e){
-    mouse.x= (e.clientX/window.innerWidth )*2-1;
-    mouse.y=-(e.clientY/window.innerHeight)*2+1;
-    raycaster.setFromCamera(mouse,camera);
-    var hits=raycaster.intersectObjects(skids);
-    if(hovered){hovered.material.color.setHex(spotCol(hovered));hovered=null;}
-    if(hits.length>0){
-      hovered=hits[0].object;
+  function highlightRow(rg){
+    if(hlRow === rg) return;
+    clearHighlight();
+    hlRow = rg;
+    rg.children.forEach(function(m){
+      if(!m.isMesh || m.userData.locId) return; // skip spots & non-meshes
+      hlSaved.push({ m:m, c:m.material.color.getHex() });
+      m.material = m.material.clone();
+      m.material.color.setHex(C_SEL);
+    });
+  }
+  function clearHighlight(){
+    if(!hlRow) return;
+    hlSaved.forEach(function(e){ e.m.material.color.setHex(e.c); });
+    hlSaved = [];
+    hlRow = null;
+  }
+
+  // Find rowGroup that owns a mesh
+  function ownerGroup(mesh){
+    for(var i=0; i<rowGroups.length; i++){
+      if(rowGroups[i].children.indexOf(mesh) !== -1) return rowGroups[i];
+    }
+    return null;
+  }
+
+  // ── Raycasting ──────────────────────────────────────────────────────────
+  var raycaster = new THREE.Raycaster();
+  var mouse     = new THREE.Vector2();
+  var hovered   = null;
+  var tooltip   = document.getElementById('tooltip');
+
+  function spotCol(s){ return s.userData.isFull ? C_FULL : C_EMPTY; }
+
+  // ── Drag state ──────────────────────────────────────────────────────────
+  var editMode = false;
+  var drag = null;  // { rg, rowIndex, offsetX }
+  var floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  var floorPt    = new THREE.Vector3();
+
+  // All rack meshes (for edit-mode hover)
+  function allRackMeshes(){
+    var out = [];
+    rowGroups.forEach(function(rg){ rg.children.forEach(function(m){ if(m.isMesh) out.push(m); }); });
+    return out;
+  }
+
+  renderer.domElement.addEventListener('mousemove', function(e){
+    mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+
+    if(editMode){
+      tooltip.style.display = 'none';
+      if(drag){
+        // Move the dragged row
+        raycaster.ray.intersectPlane(floorPlane, floorPt);
+        var newX = Math.round((floorPt.x - drag.offsetX) / GRID_SNAP) * GRID_SNAP;
+        drag.rg.position.x = newX;
+        layoutData[drag.rowIndex].x = newX;
+        renderer.domElement.style.cursor = 'grabbing';
+        renderRowList();   // update X readout live
+      } else {
+        var hits = raycaster.intersectObjects(allRackMeshes());
+        if(hits.length){
+          var rg = ownerGroup(hits[0].object);
+          if(rg) highlightRow(rg);
+          renderer.domElement.style.cursor = 'grab';
+        } else {
+          clearHighlight();
+          renderer.domElement.style.cursor = 'default';
+        }
+      }
+      return;
+    }
+
+    // Normal mode — spot hover
+    if(hovered){ hovered.material.color.setHex(spotCol(hovered)); hovered=null; }
+    var hits = raycaster.intersectObjects(skids);
+    if(hits.length){
+      hovered = hits[0].object;
       hovered.material.color.setHex(C_HOVER);
-      var d=hovered.userData;
-      document.getElementById('tt-loc').textContent=d.locId;
-      var st=document.getElementById('tt-status');
-      st.textContent=d.isFull?'FULL':'EMPTY'; st.className=d.isFull?'full':'empty';
-      tooltip.style.display='block';
-      tooltip.style.left=(e.clientX+16)+'px'; tooltip.style.top=(e.clientY-12)+'px';
-      renderer.domElement.style.cursor='pointer';
-    } else { tooltip.style.display='none'; renderer.domElement.style.cursor='default'; }
+      var d = hovered.userData;
+      document.getElementById('tt-loc').textContent = d.locId;
+      var st = document.getElementById('tt-status');
+      st.textContent = d.isFull ? 'FULL' : 'EMPTY';
+      st.className   = d.isFull ? 'full'  : 'empty';
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX+16)+'px';
+      tooltip.style.top  = (e.clientY-12)+'px';
+      renderer.domElement.style.cursor = 'pointer';
+    } else {
+      tooltip.style.display = 'none';
+      renderer.domElement.style.cursor = 'default';
+    }
   });
 
-  renderer.domElement.addEventListener('click',function(){
+  renderer.domElement.addEventListener('mousedown', function(e){
+    if(!editMode) return;
+    mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObjects(allRackMeshes());
+    if(!hits.length) return;
+    var rg = ownerGroup(hits[0].object);
+    if(!rg) return;
+    raycaster.ray.intersectPlane(floorPlane, floorPt);
+    drag = { rg: rg, rowIndex: rg.userData.rowIndex, offsetX: floorPt.x - rg.position.x };
+    controls.enabled = false;
+    e.preventDefault();
+  });
+
+  window.addEventListener('mouseup', function(){
+    if(drag){
+      layoutData[drag.rowIndex].x = drag.rg.position.x;
+      drag = null;
+      controls.enabled = true;
+      renderRowList();
+    }
+  });
+
+  renderer.domElement.addEventListener('click', function(){
+    if(editMode) return;
     if(!hovered) return;
-    hovered.userData.isFull=!hovered.userData.isFull;
+    hovered.userData.isFull = !hovered.userData.isFull;
     hovered.material.color.setHex(spotCol(hovered));
-    var st=document.getElementById('tt-status');
-    st.textContent=hovered.userData.isFull?'FULL':'EMPTY';
-    st.className=hovered.userData.isFull?'full':'empty';
+    var st = document.getElementById('tt-status');
+    st.textContent = hovered.userData.isFull ? 'FULL' : 'EMPTY';
+    st.className   = hovered.userData.isFull ? 'full' : 'empty';
     updateCounters();
   });
 
-  // ── View presets ───────────────────────────────────────────────────────
+  // ── View presets ────────────────────────────────────────────────────────
   function cam(x,y,z){
     camera.position.set(x,y,z);
-    controls.target.set(midX,5,dims.z0+dims.wD/2);
+    controls.target.set(bounds.cx, 5, bounds.z0+bounds.wD/2);
     controls.update();
   }
-  document.getElementById('vTop').onclick  =function(){cam(midX,250,dims.z0+dims.wD/2+0.01);};
-  document.getElementById('vIso').onclick  =function(){cam(midX-40,100,dims.z0+dims.wD/2+130);};
-  document.getElementById('vSide').onclick =function(){cam(-dims.wW/2-30,25,dims.z0+dims.wD/2);};
-  document.getElementById('bReset').onclick=function(){
-    skids.forEach(function(s){s.userData.isFull=false;s.material.color.setHex(C_EMPTY);});
+  document.getElementById('vTop').onclick  = function(){ cam(bounds.cx, 250, bounds.z0+bounds.wD/2+0.01); };
+  document.getElementById('vIso').onclick  = function(){ cam(bounds.cx-40, 100, bounds.z0+bounds.wD/2+130); };
+  document.getElementById('vSide').onclick = function(){ cam(bounds.minX-30, 25, bounds.z0+bounds.wD/2); };
+  document.getElementById('bReset').onclick= function(){
+    skids.forEach(function(s){ s.userData.isFull=false; s.material.color.setHex(C_EMPTY); });
     updateCounters();
   };
-  document.getElementById('bFill').onclick=function(){
-    skids.forEach(function(s){s.userData.isFull=true;s.material.color.setHex(C_FULL);});
+  document.getElementById('bFill').onclick = function(){
+    skids.forEach(function(s){ s.userData.isFull=true; s.material.color.setHex(C_FULL); });
     updateCounters();
   };
 
-  // ── Edit Panel ─────────────────────────────────────────────────────────
-  var editPanel   = document.getElementById('edit-panel');
-  var editToggle  = document.getElementById('edit-toggle');
-  var legend      = document.getElementById('legend');
-  var selectedRow = null;   // index into layoutData
+  // ── Edit Panel ──────────────────────────────────────────────────────────
+  var editPanel  = document.getElementById('edit-panel');
+  var editToggle = document.getElementById('edit-toggle');
+  var legend     = document.getElementById('legend');
+  var dragBanner = document.getElementById('drag-banner');
+  var hudHint    = document.getElementById('hud-hint');
+  var selectedRow = null;
 
   function openPanel(){
     editPanel.classList.add('open');
@@ -579,24 +647,75 @@
     editPanel.classList.remove('open');
     editToggle.classList.remove('active');
     legend.classList.remove('shifted');
+    editMode = false;
+    drag = null;
+    controls.enabled = true;
+    clearHighlight();
+    dragBanner.classList.remove('show');
+    hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
   }
-  editToggle.addEventListener('click',function(){
-    editPanel.classList.contains('open') ? closePanel() : openPanel();
+
+  editToggle.addEventListener('click', function(){
+    if(editPanel.classList.contains('open')){
+      closePanel();
+    } else {
+      openPanel();
+    }
   });
   document.getElementById('edit-close').addEventListener('click', closePanel);
 
-  // Spots count helper
+  // Toggle drag/move mode
+  document.getElementById('edit-panel').addEventListener('click', function(e){
+    if(e.target.id === 'move-toggle-btn'){
+      editMode = !editMode;
+      var btn = document.getElementById('move-toggle-btn');
+      if(editMode){
+        btn.textContent = '✓ Done Moving Rows';
+        btn.style.background = 'rgba(59,130,246,0.25)';
+        btn.style.borderColor = '#3b82f6';
+        btn.style.color = '#93c5fd';
+        dragBanner.classList.add('show');
+        hudHint.textContent = '✥ MOVE MODE: click+drag any row  |  Orbit still works on empty floor';
+        renderer.domElement.style.cursor = 'grab';
+      } else {
+        btn.textContent = '✥ Move Rows (drag)';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        dragBanner.classList.remove('show');
+        hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
+        renderer.domElement.style.cursor = 'default';
+        clearHighlight();
+        // Rebuild static to refresh bounds/walls/grid after moves
+        bounds = computeBounds();
+        buildStatic(bounds);
+      }
+    }
+  });
+
   function rowSpotCount(row){
-    return row.levels.reduce(function(a,n){return a+n*2;},0);
+    return row.levels.reduce(function(a,n){ return a+n*2; }, 0);
   }
 
-  // Render the row list
   function renderRowList(){
     var list = document.getElementById('row-list');
     list.innerHTML = '';
+
+    // Move-rows toggle button at top of list
+    var moveBtn = document.createElement('button');
+    moveBtn.id = 'move-toggle-btn';
+    moveBtn.textContent = editMode ? '✓ Done Moving Rows' : '✥ Move Rows (drag)';
+    moveBtn.style.cssText = 'display:block;width:calc(100% - 24px);margin:0 12px 10px;padding:7px 14px;border-radius:6px;font-size:0.75rem;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#aaa;transition:all 0.14s;';
+    if(editMode){
+      moveBtn.style.background = 'rgba(59,130,246,0.25)';
+      moveBtn.style.borderColor = '#3b82f6';
+      moveBtn.style.color = '#93c5fd';
+    }
+    list.appendChild(moveBtn);
+
     layoutData.forEach(function(row, ri){
       var item = document.createElement('div');
-      item.className = 'row-item' + (selectedRow===ri?' selected':'');
+      item.className = 'row-item' + (selectedRow===ri ? ' selected' : '');
 
       var header = document.createElement('div');
       header.className = 'row-item-header';
@@ -605,9 +724,9 @@
       label.className = 'row-label';
       label.textContent = 'Row ' + (ri+1);
 
-      var count = document.createElement('span');
-      count.className = 'row-spot-count';
-      count.textContent = rowSpotCount(row) + ' spots';
+      var meta = document.createElement('span');
+      meta.className = 'row-meta';
+      meta.textContent = rowSpotCount(row)+' spots  x='+row.x.toFixed(1)+'m';
 
       var actions = document.createElement('div');
       actions.className = 'row-actions';
@@ -620,7 +739,8 @@
       dupBtn.className = 'dup-btn'; dupBtn.textContent = 'Dup';
       dupBtn.addEventListener('click', function(e){
         e.stopPropagation();
-        layoutData.splice(ri+1, 0, { levels: row.levels.slice() });
+        var newRow = { levels: row.levels.slice(), x: row.x + PAIR_P };
+        layoutData.splice(ri+1, 0, newRow);
         selectedRow = null;
         rebuild();
       });
@@ -629,7 +749,7 @@
       delBtn.className = 'del-btn'; delBtn.textContent = 'Del';
       delBtn.addEventListener('click', function(e){
         e.stopPropagation();
-        if(layoutData.length<=1){return;}
+        if(layoutData.length<=1) return;
         layoutData.splice(ri,1);
         if(selectedRow===ri) selectedRow=null;
         else if(selectedRow>ri) selectedRow--;
@@ -640,26 +760,21 @@
       actions.appendChild(dupBtn);
       actions.appendChild(delBtn);
       header.appendChild(label);
-      header.appendChild(count);
+      header.appendChild(meta);
       header.appendChild(actions);
 
       var pills = document.createElement('div');
       pills.className = 'col-pills';
       row.levels.forEach(function(n,ci){
-        var p=document.createElement('span');
-        p.className='col-pill';
-        p.textContent='C'+(ci+1)+': '+n+'lvl';
+        var p = document.createElement('span');
+        p.className = 'col-pill';
+        p.textContent = 'C'+(ci+1)+':'+n+'L';
         pills.appendChild(p);
       });
 
       item.appendChild(header);
       item.appendChild(pills);
-
-      // Inline editor if selected
-      if(selectedRow===ri){
-        item.appendChild(buildRowEditor(ri));
-      }
-
+      if(selectedRow===ri) item.appendChild(buildRowEditor(ri));
       item.addEventListener('click', function(){ selectRow(ri); });
       list.appendChild(item);
     });
@@ -668,9 +783,8 @@
   function selectRow(ri){
     selectedRow = (selectedRow===ri) ? null : ri;
     renderRowList();
-    // Scroll to item
     var items = document.querySelectorAll('.row-item');
-    if(items[ri]) items[ri].scrollIntoView({block:'nearest'});
+    if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'}); // +1 for moveBtn
   }
 
   function buildRowEditor(ri){
@@ -680,38 +794,28 @@
 
     var title = document.createElement('div');
     title.className = 'editor-title';
-    title.textContent = 'Row ' + (ri+1) + ' — edit column levels';
+    title.textContent = 'Row '+(ri+1)+' — edit column levels';
     editor.appendChild(title);
 
     var colEditors = document.createElement('div');
     colEditors.className = 'col-editors';
 
     function refreshColEditors(){
-      colEditors.innerHTML='';
-      row.levels.forEach(function(n,ci){
-        var ce = document.createElement('div');
-        ce.className = 'col-editor';
-
-        var lbl = document.createElement('label');
-        lbl.textContent = 'C'+(ci+1);
-
+      colEditors.innerHTML = '';
+      row.levels.forEach(function(n, ci){
+        var ce  = document.createElement('div'); ce.className='col-editor';
+        var lbl = document.createElement('label'); lbl.textContent='C'+(ci+1);
         var inp = document.createElement('input');
         inp.type='number'; inp.min=1; inp.max=12; inp.value=n;
         inp.addEventListener('change',function(){
           var v=parseInt(inp.value,10);
-          if(v>=1&&v<=12) row.levels[ci]=v;
-          else inp.value=row.levels[ci];
+          if(v>=1&&v<=12) row.levels[ci]=v; else inp.value=row.levels[ci];
         });
-
-        var delC = document.createElement('button');
-        delC.className='del-col'; delC.textContent='✕';
-        delC.title='Remove this column';
+        var delC = document.createElement('button'); delC.className='del-col'; delC.textContent='✕';
         delC.addEventListener('click',function(){
           if(row.levels.length<=1) return;
-          row.levels.splice(ci,1);
-          refreshColEditors();
+          row.levels.splice(ci,1); refreshColEditors();
         });
-
         ce.appendChild(lbl); ce.appendChild(inp); ce.appendChild(delC);
         colEditors.appendChild(ce);
       });
@@ -719,65 +823,45 @@
     refreshColEditors();
     editor.appendChild(colEditors);
 
-    var btns = document.createElement('div');
-    btns.className = 'editor-btns';
+    var btns = document.createElement('div'); btns.className='editor-btns';
 
-    var addCol = document.createElement('button');
-    addCol.className='editor-btn add-col'; addCol.textContent='+ Add Column';
-    addCol.addEventListener('click',function(){
-      row.levels.push(row.levels[row.levels.length-1]||4);
-      refreshColEditors();
-    });
+    var addCol = document.createElement('button'); addCol.className='editor-btn add-col'; addCol.textContent='+ Column';
+    addCol.addEventListener('click',function(){ row.levels.push(row.levels[row.levels.length-1]||4); refreshColEditors(); });
 
-    var apply = document.createElement('button');
-    apply.className='editor-btn apply'; apply.textContent='✓ Apply';
-    apply.addEventListener('click',function(){
-      selectedRow=null;
-      rebuild();
-    });
+    var apply = document.createElement('button'); apply.className='editor-btn apply'; apply.textContent='✓ Apply';
+    apply.addEventListener('click',function(){ selectedRow=null; rebuild(); });
 
-    var cancel = document.createElement('button');
-    cancel.className='editor-btn cancel'; cancel.textContent='Cancel';
-    cancel.addEventListener('click',function(){
-      selectedRow=null;
-      renderRowList();
-    });
+    var cancel = document.createElement('button'); cancel.className='editor-btn cancel'; cancel.textContent='Cancel';
+    cancel.addEventListener('click',function(){ selectedRow=null; renderRowList(); });
 
-    btns.appendChild(addCol);
-    btns.appendChild(apply);
-    btns.appendChild(cancel);
+    btns.appendChild(addCol); btns.appendChild(apply); btns.appendChild(cancel);
     editor.appendChild(btns);
-
     return editor;
   }
 
-  // Add Row button
   document.getElementById('edit-add-row').addEventListener('click',function(){
-    var template = layoutData.length>0
-      ? layoutData[layoutData.length-1].levels.slice()
-      : [4,5,5,6];
-    layoutData.push({ levels: template });
+    var tmpl = layoutData.length>0 ? layoutData[layoutData.length-1].levels.slice() : [4,5,5,6];
+    var lastX = layoutData.length>0 ? layoutData[layoutData.length-1].x : 0;
+    layoutData.push({ levels: tmpl, x: lastX + PAIR_P });
     selectedRow = layoutData.length-1;
     rebuild();
-    // Scroll to bottom
-    var list=document.getElementById('row-list');
-    list.scrollTop=list.scrollHeight;
+    document.getElementById('row-list').scrollTop = 999999;
   });
 
   renderRowList();
 
-  // ── Resize ────────────────────────────────────────────────────────────
+  // ── Resize ──────────────────────────────────────────────────────────────
   window.addEventListener('resize',function(){
-    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth,window.innerHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // ── Render loop ───────────────────────────────────────────────────────
+  // ── Render loop ─────────────────────────────────────────────────────────
   (function animate(){
     requestAnimationFrame(animate);
     controls.update();
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
   })();
 })();
 </script>
