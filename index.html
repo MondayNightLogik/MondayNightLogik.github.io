@@ -9,17 +9,19 @@
     body { background: #0d1117; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     #app { width: 100vw; height: 100vh; position: relative; }
 
+    /* ── HUD ── */
     #hud {
       position: absolute; top: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 18px;
-      background: rgba(10,10,25,0.88);
+      background: rgba(10,10,25,0.9);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       z-index: 10; pointer-events: none;
     }
     #hud h1 { color: #e2e8ff; font-size: 1rem; font-weight: 600; letter-spacing: 1px; }
     #hud span { color: #555; font-size: 0.72rem; }
 
+    /* ── Tooltip ── */
     #tooltip {
       position: absolute; display: none; z-index: 20;
       background: rgba(8,8,30,0.96); border: 1px solid rgba(100,180,255,0.35);
@@ -31,6 +33,7 @@
     #tt-status.full  { color: #f87171; }
     #tt-hint   { color: #444; font-size: 0.68rem; margin-top: 4px; }
 
+    /* ── Left sidebar (view controls) ── */
     #sidebar {
       position: absolute; top: 56px; left: 12px;
       display: flex; flex-direction: column; gap: 5px; z-index: 10;
@@ -39,18 +42,25 @@
       background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.12);
       color: #bbb; padding: 6px 14px; border-radius: 6px;
       font-size: 0.72rem; cursor: pointer; transition: all 0.14s; white-space: nowrap;
+      text-align: left;
     }
     .btn:hover { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
+    .btn.danger:hover { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #fca5a5; }
+    .btn.active { background: rgba(59,130,246,0.35); border-color: #3b82f6; color: #fff; }
 
+    /* ── Legend ── */
     #legend {
-      position: absolute; top: 56px; right: 12px; z-index: 10;
+      position: absolute; top: 56px; right: 12px; z-index: 5;
       background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.08);
       border-radius: 8px; padding: 10px 14px; pointer-events: none;
+      transition: right 0.3s;
     }
+    #legend.shifted { right: 332px; }
     #legend h3 { color: #666; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 7px; }
     .li { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; font-size: 0.74rem; color: #aaa; }
     .sw { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
 
+    /* ── Counter bar ── */
     #bar {
       position: absolute; bottom: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: center; gap: 36px;
@@ -65,6 +75,122 @@
     #sf .n { color: #f87171; } #sf .l { color: #991b1b; }
     #st .n { color: #93c5fd; } #st .l { color: #1e40af; }
     .dv { width: 1px; height: 34px; background: rgba(255,255,255,0.08); }
+
+    /* ── Edit Panel ── */
+    #edit-panel {
+      position: absolute; top: 0; right: -320px; bottom: 0;
+      width: 320px;
+      background: rgba(8,8,22,0.97);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      z-index: 15;
+      display: flex; flex-direction: column;
+      transition: right 0.3s ease;
+    }
+    #edit-panel.open { right: 0; }
+
+    #edit-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #edit-header h2 { color: #e2e8ff; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; }
+    #edit-close {
+      background: none; border: none; color: #666; font-size: 1.2rem;
+      cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    #edit-close:hover { color: #ccc; }
+
+    #edit-add-row {
+      margin: 10px 12px 6px;
+      background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
+      color: #4ade80; padding: 7px 14px; border-radius: 6px;
+      font-size: 0.75rem; cursor: pointer; transition: all 0.14s;
+      flex-shrink: 0;
+    }
+    #edit-add-row:hover { background: rgba(34,197,94,0.25); }
+
+    #row-list {
+      flex: 1; overflow-y: auto; padding: 4px 0;
+    }
+    #row-list::-webkit-scrollbar { width: 4px; }
+    #row-list::-webkit-scrollbar-track { background: transparent; }
+    #row-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .row-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .row-item:hover { background: rgba(255,255,255,0.03); }
+    .row-item.selected { background: rgba(59,130,246,0.12); border-left: 2px solid #3b82f6; }
+
+    .row-item-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .row-label { color: #93c5fd; font-size: 0.78rem; font-weight: 600; }
+    .row-spot-count { color: #555; font-size: 0.68rem; }
+    .row-actions { display: flex; gap: 4px; }
+    .row-actions button {
+      background: none; border: 1px solid rgba(255,255,255,0.1);
+      color: #666; font-size: 0.65rem; padding: 2px 7px; border-radius: 4px;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .row-actions .edit-btn:hover { border-color: #3b82f6; color: #93c5fd; }
+    .row-actions .del-btn:hover  { border-color: #ef4444; color: #f87171; }
+    .row-actions .dup-btn:hover  { border-color: #a78bfa; color: #c4b5fd; }
+
+    .col-pills { display: flex; flex-wrap: wrap; gap: 3px; }
+    .col-pill {
+      background: rgba(255,255,255,0.06); border-radius: 3px;
+      padding: 1px 6px; font-size: 0.65rem; color: #888;
+    }
+
+    /* Row editor (inline) */
+    .row-editor {
+      background: rgba(15,15,40,0.8);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 12px;
+    }
+    .editor-title { color: #7dd3fc; font-size: 0.72rem; font-weight: 600; margin-bottom: 8px; }
+    .col-editors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .col-editor {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .col-editor label { color: #666; font-size: 0.6rem; }
+    .col-editor input {
+      width: 42px; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
+      color: #e2e8ff; font-size: 0.8rem; text-align: center; padding: 3px 0;
+    }
+    .col-editor input:focus { outline: none; border-color: #3b82f6; }
+    .col-editor .del-col {
+      background: none; border: none; color: #555; font-size: 0.7rem;
+      cursor: pointer; padding: 0;
+    }
+    .col-editor .del-col:hover { color: #ef4444; }
+
+    .editor-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .editor-btn {
+      font-size: 0.68rem; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+      border: 1px solid; transition: all 0.12s;
+    }
+    .editor-btn.add-col { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
+    .editor-btn.add-col:hover { background: rgba(59,130,246,0.3); }
+    .editor-btn.apply { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #4ade80; }
+    .editor-btn.apply:hover { background: rgba(34,197,94,0.3); }
+    .editor-btn.cancel { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: #888; }
+    .editor-btn.cancel:hover { background: rgba(255,255,255,0.1); }
+
+    #edit-toggle {
+      position: absolute; top: 56px; right: 12px; z-index: 16;
+      background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.12);
+      color: #bbb; padding: 6px 14px; border-radius: 6px;
+      font-size: 0.72rem; cursor: pointer; transition: all 0.14s;
+    }
+    #edit-toggle:hover, #edit-toggle.active { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
   </style>
 </head>
 <body>
@@ -84,8 +210,8 @@
     <button class="btn" id="vTop">Top View</button>
     <button class="btn" id="vIso">Isometric</button>
     <button class="btn" id="vSide">Side View</button>
-    <button class="btn" id="bReset">Reset - All Empty</button>
-    <button class="btn" id="bFill">Set - All Full</button>
+    <button class="btn" id="bReset">Reset — All Empty</button>
+    <button class="btn" id="bFill">Set — All Full</button>
   </div>
 
   <div id="legend">
@@ -94,6 +220,18 @@
     <div class="li"><div class="sw" style="background:#ef4444"></div>Full</div>
     <div class="li"><div class="sw" style="background:#facc15"></div>Hovered</div>
     <div class="li"><div class="sw" style="background:#4a5568"></div>Rack</div>
+  </div>
+
+  <button id="edit-toggle">✏ Edit Layout</button>
+
+  <!-- Edit Panel -->
+  <div id="edit-panel">
+    <div id="edit-header">
+      <h2>Edit Warehouse Layout</h2>
+      <button id="edit-close">✕</button>
+    </div>
+    <button id="edit-add-row">+ Add Row</button>
+    <div id="row-list"></div>
   </div>
 
   <div id="bar">
@@ -111,6 +249,7 @@
 (function () {
   'use strict';
 
+  // ── Renderer ───────────────────────────────────────────────────────────
   var app      = document.getElementById('app');
   var renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -121,7 +260,6 @@
 
   var scene  = new THREE.Scene();
   scene.fog  = new THREE.Fog(0x0d1117, 200, 500);
-
   var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 800);
 
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -131,21 +269,20 @@
   controls.maxDistance   = 500;
   controls.maxPolarAngle = Math.PI / 2.05;
 
+  // ── Lighting ───────────────────────────────────────────────────────────
   scene.add(new THREE.AmbientLight(0x7080a0, 0.9));
   var sun = new THREE.DirectionalLight(0xffffff, 1.1);
   sun.position.set(50, 150, 30);
   sun.castShadow = true;
   sun.shadow.mapSize.width  = 2048;
   sun.shadow.mapSize.height = 2048;
-  sun.shadow.camera.left   = -250;
-  sun.shadow.camera.right  =  250;
-  sun.shadow.camera.top    =  60;
-  sun.shadow.camera.bottom = -60;
+  sun.shadow.camera.left   = -250; sun.shadow.camera.right  =  250;
+  sun.shadow.camera.top    =  60;  sun.shadow.camera.bottom = -60;
   sun.shadow.camera.far    = 500;
   scene.add(sun);
 
+  // ── Colours & materials ────────────────────────────────────────────────
   var C_EMPTY = 0x22c55e, C_FULL = 0xef4444, C_HOVER = 0xfacc15;
-
   var mFloor   = new THREE.MeshLambertMaterial({ color: 0x1e2530 });
   var mWall    = new THREE.MeshLambertMaterial({ color: 0x1a2235, transparent: true, opacity: 0.2 });
   var mUpright = new THREE.MeshLambertMaterial({ color: 0x4a5568 });
@@ -153,29 +290,20 @@
   var mPallet  = new THREE.MeshLambertMaterial({ color: 0x5c3d1a });
 
   var geoCache = {};
-  function getBoxGeo(w, h, d) {
-    var k = w.toFixed(2)+','+h.toFixed(2)+','+d.toFixed(2);
-    if (!geoCache[k]) geoCache[k] = new THREE.BoxGeometry(w, h, d);
+  function geo(w,h,d){
+    var k=w.toFixed(2)+','+h.toFixed(2)+','+d.toFixed(2);
+    if(!geoCache[k]) geoCache[k]=new THREE.BoxGeometry(w,h,d);
     return geoCache[k];
   }
-  function addMesh(w, h, d, mat, x, y, z) {
-    var m = new THREE.Mesh(getBoxGeo(w,h,d), mat);
-    m.position.set(x,y,z);
-    scene.add(m);
-    return m;
-  }
 
-  // ── Layout
-  // Rows left->right (X). Each row extends north(back) -> south(front) (Z).
-  // Columns = sections within a row at different Z depths, each with N levels.
-  // 2 spots per level per column: side A (west) and side B (east).
-  //
-  // Type A: cols [4,5,5,6]       rows  1-4   (40 spots/row)
-  // Type B: cols [4,5,5,6,6,5]   rows  5-12  (62 spots/row)
-  // Type C: cols [4,5,5,6,6]     rows 13-20  (52 spots/row)
-  // Type D: cols [4,5,5,6,6,5]   rows 21-34  (62 spots/row)
+  // ── Warehouse dims ─────────────────────────────────────────────────────
+  var SPOT_W = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
+  var LVL_H  = 2.0, AISLE = 3.0,      ROW_P = BAY_W + AISLE;
+  var SPOT_H = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
 
-  var ROW_TYPES = {
+  // ── Layout data (mutable) ──────────────────────────────────────────────
+  // Each row: { levels: [n, n, ...] }  — one entry per column (N→S)
+  var DEFAULT_TYPES = {
     A: [4,5,5,6],
     B: [4,5,5,6,6,5],
     C: [4,5,5,6,6],
@@ -183,172 +311,397 @@
   };
   var ROW_GROUPS = [[4,'A'],[8,'B'],[8,'C'],[14,'D']];
 
-  var allRows = [];
-  ROW_GROUPS.forEach(function(g){ for(var i=0;i<g[0];i++) allRows.push(g[1]); });
-
-  var SPOT_W  = 1.1;
-  var BAY_W   = SPOT_W * 2;
-  var COL_D   = 1.5;
-  var LVL_H   = 2.0;
-  var AISLE   = 3.0;
-  var ROW_P   = BAY_W + AISLE;   // row pitch = 5.2m
-  var SPOT_H  = 1.5;
-  var SPOT_D  = COL_D * 0.78;
-  var UT      = 0.10;
-
-  var NROWS   = allRows.length;  // 34
-  var MAX_C   = 6;
-
-  var wW = (NROWS-1)*ROW_P;
-  var wD = MAX_C*COL_D;
-  var x0 = -wW/2;               // west edge (row 1 centre-X)
-  var z0 = -wD/2;               // north wall Z
-
-  // Floor
-  addMesh(wW+20, 0.2, wD+20, mFloor, 0, -0.1, z0+wD/2);
-  var grid = new THREE.GridHelper(Math.max(wW,wD)+20, 50, 0x1a2a3a, 0x1a2a3a);
-  grid.position.set(0, 0.01, z0+wD/2);
-  scene.add(grid);
-
-  // Walls
-  var WH = MAX_C*LVL_H+4;
-  addMesh(wW+20,WH,0.3, mWall, 0,WH/2, z0-2);
-  addMesh(wW+20,WH,0.3, mWall, 0,WH/2, z0+wD+2);
-  addMesh(0.3,WH,wD+20, mWall, x0-2,WH/2, z0+wD/2);
-  addMesh(0.3,WH,wD+20, mWall, x0+wW+2,WH/2, z0+wD/2);
-
-  var skids = [];
-  var spotGeo   = getBoxGeo(SPOT_W-0.12, SPOT_H, SPOT_D);
-  var palletGeo = getBoxGeo(SPOT_W-0.08, 0.09, SPOT_D);
-
-  allRows.forEach(function(rowType, ri) {
-    var cols   = ROW_TYPES[rowType];
-    var rx     = x0 + ri*ROW_P;
-    var rowNum = ri+1;
-
-    // Uprights at each column boundary
-    for(var ci=0; ci<=cols.length; ci++){
-      var uz  = z0 + ci*COL_D;
-      var lH  = ci>0         ? cols[ci-1]*LVL_H : 0;
-      var rH  = ci<cols.length ? cols[ci]*LVL_H  : 0;
-      var upH = Math.max(lH,rH);
-      if(!upH) continue;
-      addMesh(UT,upH,UT, mUpright, rx-SPOT_W/2, upH/2, uz);
-      addMesh(UT,upH,UT, mUpright, rx+SPOT_W/2, upH/2, uz);
-    }
-
-    cols.forEach(function(levels, ci){
-      var cz   = z0 + ci*COL_D;
-      var midZ = cz + COL_D/2;
-
-      // Beams at each level
-      for(var lv=1; lv<=levels; lv++){
-        var by = lv*LVL_H - 0.08;
-        addMesh(BAY_W,0.09,0.09, mBeam, rx,by,cz);
-        addMesh(BAY_W,0.09,0.09, mBeam, rx,by,cz+COL_D);
-      }
-
-      for(var lv=0; lv<levels; lv++){
-        var sy = lv*LVL_H + 0.09 + SPOT_H/2;
-        var py = lv*LVL_H + 0.045;
-
-        ['A','B'].forEach(function(side){
-          var sx = rx + (side==='A' ? -SPOT_W/2 : SPOT_W/2);
-          var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
-
-          var pm = new THREE.Mesh(palletGeo, mPallet);
-          pm.position.set(sx, py, midZ);
-          scene.add(pm);
-
-          var mat  = new THREE.MeshLambertMaterial({color: C_EMPTY});
-          var spot = new THREE.Mesh(spotGeo, mat);
-          spot.position.set(sx, sy, midZ);
-          spot.castShadow = spot.receiveShadow = true;
-          spot.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1, side:side };
-          scene.add(spot);
-          skids.push(spot);
-        });
-      }
-    });
+  var layoutData = [];
+  ROW_GROUPS.forEach(function(g){
+    for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice() });
   });
 
-  var midX = 0, midZ = z0+wD/2;
-  controls.target.set(midX, 5, midZ);
-  camera.position.set(midX, 120, midZ+120);
+  // ── Scene groups ───────────────────────────────────────────────────────
+  var staticGroup = new THREE.Group();  // floor, walls, grid (rebuilt on resize only)
+  var rackGroup   = new THREE.Group();  // all rack + spot meshes (rebuilt on layout change)
+  scene.add(staticGroup);
+  scene.add(rackGroup);
+
+  // ── Static scene (floor + walls) ──────────────────────────────────────
+  function buildStatic() {
+    while(staticGroup.children.length) staticGroup.remove(staticGroup.children[0]);
+
+    var nRows = layoutData.length;
+    var maxC  = Math.max.apply(null, layoutData.map(function(r){return r.levels.length;}));
+    var wW = Math.max(0, (nRows-1)*ROW_P);
+    var wD = maxC*COL_D;
+    var x0 = -wW/2, z0 = -wD/2;
+
+    function sm(w,h,d,mat,x,y,z){
+      var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); staticGroup.add(m); return m;
+    }
+
+    sm(wW+20,0.2,wD+20,mFloor,0,-0.1,z0+wD/2);
+    var grid=new THREE.GridHelper(Math.max(wW,wD)+20,50,0x1a2a3a,0x1a2a3a);
+    grid.position.set(0,0.01,z0+wD/2);
+    staticGroup.add(grid);
+
+    var WH=maxC*LVL_H+4;
+    sm(wW+20,WH,0.3,mWall,0,WH/2,z0-2);
+    sm(wW+20,WH,0.3,mWall,0,WH/2,z0+wD+2);
+    sm(0.3,WH,wD+20,mWall,x0-2,WH/2,z0+wD/2);
+    sm(0.3,WH,wD+20,mWall,x0+wW+2,WH/2,z0+wD/2);
+
+    return { wW:wW, wD:wD, x0:x0, z0:z0 };
+  }
+
+  // ── Rack + skid spots ──────────────────────────────────────────────────
+  var skids = [];
+
+  function buildRacks(dims) {
+    // Clear previous
+    while(rackGroup.children.length) rackGroup.remove(rackGroup.children[0]);
+    skids = [];
+
+    var x0=dims.x0, z0=dims.z0;
+    var spotGeo_   = geo(SPOT_W-0.12, SPOT_H, SPOT_D);
+    var palletGeo_ = geo(SPOT_W-0.08, 0.09,   SPOT_D);
+
+    function rm(w,h,d,mat,x,y,z){
+      var m=new THREE.Mesh(geo(w,h,d),mat); m.position.set(x,y,z); rackGroup.add(m); return m;
+    }
+
+    layoutData.forEach(function(row, ri){
+      var cols   = row.levels;
+      var rx     = x0 + ri*ROW_P;
+      var rowNum = ri+1;
+
+      // Uprights
+      for(var ci=0;ci<=cols.length;ci++){
+        var uz = z0+ci*COL_D;
+        var lH = ci>0          ? cols[ci-1]*LVL_H : 0;
+        var rH = ci<cols.length? cols[ci]*LVL_H   : 0;
+        var upH= Math.max(lH,rH);
+        if(!upH) continue;
+        rm(UT,upH,UT,mUpright, rx-SPOT_W/2, upH/2, uz);
+        rm(UT,upH,UT,mUpright, rx+SPOT_W/2, upH/2, uz);
+      }
+
+      cols.forEach(function(levels,ci){
+        var cz   = z0+ci*COL_D;
+        var midZ = cz+COL_D/2;
+
+        for(var lv=1;lv<=levels;lv++){
+          var by=lv*LVL_H-0.08;
+          rm(BAY_W,0.09,0.09,mBeam,rx,by,cz);
+          rm(BAY_W,0.09,0.09,mBeam,rx,by,cz+COL_D);
+        }
+        for(var lv=0;lv<levels;lv++){
+          var sy=lv*LVL_H+0.09+SPOT_H/2;
+          var py=lv*LVL_H+0.045;
+          ['A','B'].forEach(function(side){
+            var sx = rx+(side==='A'?-SPOT_W/2:SPOT_W/2);
+            var locId='R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
+            var pm=new THREE.Mesh(palletGeo_,mPallet);
+            pm.position.set(sx,py,midZ); rackGroup.add(pm);
+            var mat=new THREE.MeshLambertMaterial({color:C_EMPTY});
+            var sp=new THREE.Mesh(spotGeo_,mat);
+            sp.position.set(sx,sy,midZ);
+            sp.castShadow=sp.receiveShadow=true;
+            sp.userData={locId:locId,isFull:false,row:rowNum,col:ci+1,level:lv+1,side:side};
+            rackGroup.add(sp);
+            skids.push(sp);
+          });
+        }
+      });
+    });
+  }
+
+  // ── Full rebuild ───────────────────────────────────────────────────────
+  var dims;
+  function rebuild() {
+    dims = buildStatic();
+    buildRacks(dims);
+    updateCounters();
+    renderRowList();
+  }
+  rebuild();
+
+  // Camera initial position
+  var midX=0, midZ=dims.z0+dims.wD/2;
+  controls.target.set(midX,5,midZ);
+  camera.position.set(midX,120,midZ+120);
   controls.update();
 
+  // ── Counters ───────────────────────────────────────────────────────────
   function updateCounters(){
-    var full = skids.filter(function(s){return s.userData.isFull;}).length;
-    document.getElementById('ce').textContent = skids.length-full;
-    document.getElementById('cf').textContent = full;
-    document.getElementById('ct').textContent = skids.length;
+    var full=skids.filter(function(s){return s.userData.isFull;}).length;
+    document.getElementById('ce').textContent=skids.length-full;
+    document.getElementById('cf').textContent=full;
+    document.getElementById('ct').textContent=skids.length;
   }
-  updateCounters();
 
-  var raycaster = new THREE.Raycaster();
-  var mouse = new THREE.Vector2();
-  var hovered = null;
-  var tooltip = document.getElementById('tooltip');
+  // ── Raycasting ─────────────────────────────────────────────────────────
+  var raycaster=new THREE.Raycaster(), mouse=new THREE.Vector2(), hovered=null;
+  var tooltip=document.getElementById('tooltip');
+  function spotCol(s){return s.userData.isFull?C_FULL:C_EMPTY;}
 
-  function spotCol(s){ return s.userData.isFull ? C_FULL : C_EMPTY; }
-
-  renderer.domElement.addEventListener('mousemove', function(e){
-    mouse.x =  (e.clientX/window.innerWidth )*2-1;
-    mouse.y = -(e.clientY/window.innerHeight)*2+1;
-    raycaster.setFromCamera(mouse, camera);
-    var hits = raycaster.intersectObjects(skids);
-    if(hovered){ hovered.material.color.setHex(spotCol(hovered)); hovered=null; }
+  renderer.domElement.addEventListener('mousemove',function(e){
+    mouse.x= (e.clientX/window.innerWidth )*2-1;
+    mouse.y=-(e.clientY/window.innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(skids);
+    if(hovered){hovered.material.color.setHex(spotCol(hovered));hovered=null;}
     if(hits.length>0){
-      hovered = hits[0].object;
+      hovered=hits[0].object;
       hovered.material.color.setHex(C_HOVER);
-      var d = hovered.userData;
-      document.getElementById('tt-loc').textContent = d.locId;
-      var st = document.getElementById('tt-status');
-      st.textContent = d.isFull?'FULL':'EMPTY';
-      st.className   = d.isFull?'full':'empty';
+      var d=hovered.userData;
+      document.getElementById('tt-loc').textContent=d.locId;
+      var st=document.getElementById('tt-status');
+      st.textContent=d.isFull?'FULL':'EMPTY'; st.className=d.isFull?'full':'empty';
       tooltip.style.display='block';
-      tooltip.style.left=(e.clientX+16)+'px';
-      tooltip.style.top=(e.clientY-12)+'px';
+      tooltip.style.left=(e.clientX+16)+'px'; tooltip.style.top=(e.clientY-12)+'px';
       renderer.domElement.style.cursor='pointer';
-    } else {
-      tooltip.style.display='none';
-      renderer.domElement.style.cursor='default';
-    }
+    } else { tooltip.style.display='none'; renderer.domElement.style.cursor='default'; }
   });
 
-  renderer.domElement.addEventListener('click', function(){
+  renderer.domElement.addEventListener('click',function(){
     if(!hovered) return;
-    hovered.userData.isFull = !hovered.userData.isFull;
+    hovered.userData.isFull=!hovered.userData.isFull;
     hovered.material.color.setHex(spotCol(hovered));
-    var st = document.getElementById('tt-status');
-    st.textContent = hovered.userData.isFull?'FULL':'EMPTY';
-    st.className   = hovered.userData.isFull?'full':'empty';
+    var st=document.getElementById('tt-status');
+    st.textContent=hovered.userData.isFull?'FULL':'EMPTY';
+    st.className=hovered.userData.isFull?'full':'empty';
     updateCounters();
   });
 
-  function cam(x,y,z){ camera.position.set(x,y,z); controls.target.set(midX,5,midZ); controls.update(); }
-  document.getElementById('vTop').onclick  = function(){ cam(midX,250,midZ+0.01); };
-  document.getElementById('vIso').onclick  = function(){ cam(midX-40,100,midZ+130); };
-  document.getElementById('vSide').onclick = function(){ cam(x0-30,25,midZ); };
-  document.getElementById('bReset').onclick= function(){
+  // ── View presets ───────────────────────────────────────────────────────
+  function cam(x,y,z){
+    camera.position.set(x,y,z);
+    controls.target.set(midX,5,dims.z0+dims.wD/2);
+    controls.update();
+  }
+  document.getElementById('vTop').onclick  =function(){cam(midX,250,dims.z0+dims.wD/2+0.01);};
+  document.getElementById('vIso').onclick  =function(){cam(midX-40,100,dims.z0+dims.wD/2+130);};
+  document.getElementById('vSide').onclick =function(){cam(dims.x0-30,25,dims.z0+dims.wD/2);};
+  document.getElementById('bReset').onclick=function(){
     skids.forEach(function(s){s.userData.isFull=false;s.material.color.setHex(C_EMPTY);});
     updateCounters();
   };
-  document.getElementById('bFill').onclick = function(){
+  document.getElementById('bFill').onclick=function(){
     skids.forEach(function(s){s.userData.isFull=true;s.material.color.setHex(C_FULL);});
     updateCounters();
   };
 
-  window.addEventListener('resize', function(){
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  // ── Edit Panel ─────────────────────────────────────────────────────────
+  var editPanel   = document.getElementById('edit-panel');
+  var editToggle  = document.getElementById('edit-toggle');
+  var legend      = document.getElementById('legend');
+  var selectedRow = null;   // index into layoutData
+
+  function openPanel(){
+    editPanel.classList.add('open');
+    editToggle.classList.add('active');
+    legend.classList.add('shifted');
+  }
+  function closePanel(){
+    editPanel.classList.remove('open');
+    editToggle.classList.remove('active');
+    legend.classList.remove('shifted');
+  }
+  editToggle.addEventListener('click',function(){
+    editPanel.classList.contains('open') ? closePanel() : openPanel();
+  });
+  document.getElementById('edit-close').addEventListener('click', closePanel);
+
+  // Spots count helper
+  function rowSpotCount(row){
+    return row.levels.reduce(function(a,n){return a+n*2;},0);
+  }
+
+  // Render the row list
+  function renderRowList(){
+    var list = document.getElementById('row-list');
+    list.innerHTML = '';
+    layoutData.forEach(function(row, ri){
+      var item = document.createElement('div');
+      item.className = 'row-item' + (selectedRow===ri?' selected':'');
+
+      var header = document.createElement('div');
+      header.className = 'row-item-header';
+
+      var label = document.createElement('span');
+      label.className = 'row-label';
+      label.textContent = 'Row ' + (ri+1);
+
+      var count = document.createElement('span');
+      count.className = 'row-spot-count';
+      count.textContent = rowSpotCount(row) + ' spots';
+
+      var actions = document.createElement('div');
+      actions.className = 'row-actions';
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn'; editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', function(e){ e.stopPropagation(); selectRow(ri); });
+
+      var dupBtn = document.createElement('button');
+      dupBtn.className = 'dup-btn'; dupBtn.textContent = 'Dup';
+      dupBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        layoutData.splice(ri+1, 0, { levels: row.levels.slice() });
+        selectedRow = null;
+        rebuild();
+      });
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'del-btn'; delBtn.textContent = 'Del';
+      delBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(layoutData.length<=1){return;}
+        layoutData.splice(ri,1);
+        if(selectedRow===ri) selectedRow=null;
+        else if(selectedRow>ri) selectedRow--;
+        rebuild();
+      });
+
+      actions.appendChild(editBtn);
+      actions.appendChild(dupBtn);
+      actions.appendChild(delBtn);
+      header.appendChild(label);
+      header.appendChild(count);
+      header.appendChild(actions);
+
+      var pills = document.createElement('div');
+      pills.className = 'col-pills';
+      row.levels.forEach(function(n,ci){
+        var p=document.createElement('span');
+        p.className='col-pill';
+        p.textContent='C'+(ci+1)+': '+n+'lvl';
+        pills.appendChild(p);
+      });
+
+      item.appendChild(header);
+      item.appendChild(pills);
+
+      // Inline editor if selected
+      if(selectedRow===ri){
+        item.appendChild(buildRowEditor(ri));
+      }
+
+      item.addEventListener('click', function(){ selectRow(ri); });
+      list.appendChild(item);
+    });
+  }
+
+  function selectRow(ri){
+    selectedRow = (selectedRow===ri) ? null : ri;
+    renderRowList();
+    // Scroll to item
+    var items = document.querySelectorAll('.row-item');
+    if(items[ri]) items[ri].scrollIntoView({block:'nearest'});
+  }
+
+  function buildRowEditor(ri){
+    var row = layoutData[ri];
+    var editor = document.createElement('div');
+    editor.className = 'row-editor';
+
+    var title = document.createElement('div');
+    title.className = 'editor-title';
+    title.textContent = 'Row ' + (ri+1) + ' — edit column levels';
+    editor.appendChild(title);
+
+    var colEditors = document.createElement('div');
+    colEditors.className = 'col-editors';
+
+    function refreshColEditors(){
+      colEditors.innerHTML='';
+      row.levels.forEach(function(n,ci){
+        var ce = document.createElement('div');
+        ce.className = 'col-editor';
+
+        var lbl = document.createElement('label');
+        lbl.textContent = 'C'+(ci+1);
+
+        var inp = document.createElement('input');
+        inp.type='number'; inp.min=1; inp.max=12; inp.value=n;
+        inp.addEventListener('change',function(){
+          var v=parseInt(inp.value,10);
+          if(v>=1&&v<=12) row.levels[ci]=v;
+          else inp.value=row.levels[ci];
+        });
+
+        var delC = document.createElement('button');
+        delC.className='del-col'; delC.textContent='✕';
+        delC.title='Remove this column';
+        delC.addEventListener('click',function(){
+          if(row.levels.length<=1) return;
+          row.levels.splice(ci,1);
+          refreshColEditors();
+        });
+
+        ce.appendChild(lbl); ce.appendChild(inp); ce.appendChild(delC);
+        colEditors.appendChild(ce);
+      });
+    }
+    refreshColEditors();
+    editor.appendChild(colEditors);
+
+    var btns = document.createElement('div');
+    btns.className = 'editor-btns';
+
+    var addCol = document.createElement('button');
+    addCol.className='editor-btn add-col'; addCol.textContent='+ Add Column';
+    addCol.addEventListener('click',function(){
+      row.levels.push(row.levels[row.levels.length-1]||4);
+      refreshColEditors();
+    });
+
+    var apply = document.createElement('button');
+    apply.className='editor-btn apply'; apply.textContent='✓ Apply';
+    apply.addEventListener('click',function(){
+      selectedRow=null;
+      rebuild();
+    });
+
+    var cancel = document.createElement('button');
+    cancel.className='editor-btn cancel'; cancel.textContent='Cancel';
+    cancel.addEventListener('click',function(){
+      selectedRow=null;
+      renderRowList();
+    });
+
+    btns.appendChild(addCol);
+    btns.appendChild(apply);
+    btns.appendChild(cancel);
+    editor.appendChild(btns);
+
+    return editor;
+  }
+
+  // Add Row button
+  document.getElementById('edit-add-row').addEventListener('click',function(){
+    var template = layoutData.length>0
+      ? layoutData[layoutData.length-1].levels.slice()
+      : [4,5,5,6];
+    layoutData.push({ levels: template });
+    selectedRow = layoutData.length-1;
+    rebuild();
+    // Scroll to bottom
+    var list=document.getElementById('row-list');
+    list.scrollTop=list.scrollHeight;
   });
 
+  renderRowList();
+
+  // ── Resize ────────────────────────────────────────────────────────────
+  window.addEventListener('resize',function(){
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+
+  // ── Render loop ───────────────────────────────────────────────────────
   (function animate(){
     requestAnimationFrame(animate);
     controls.update();
-    renderer.render(scene, camera);
+    renderer.render(scene,camera);
   })();
 })();
 </script>
