@@ -105,6 +105,22 @@
     }
     #edit-add-row:hover { background: rgba(34,197,94,0.25); }
 
+    #edit-tools {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+      padding: 10px 12px 4px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .tool-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+      color: #bbb; padding: 5px 9px; border-radius: 5px;
+      font-size: 0.68rem; cursor: pointer; transition: all 0.12s;
+    }
+    .tool-btn:hover { background: rgba(59,130,246,0.25); border-color: #3b82f6; color: #fff; }
+    #saveBtn { background: rgba(34,197,94,0.16); border-color: rgba(34,197,94,0.4); color: #4ade80; }
+    #saveBtn:hover { background: rgba(34,197,94,0.32); border-color: #22c55e; color: #fff; }
+    #resetBtn:hover { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #fff; }
+    #tool-status { font-size: 0.66rem; font-weight: 700; margin-left: auto; min-height: 12px; }
+
     #row-list { flex: 1; overflow-y: auto; padding: 4px 0; }
     #row-list::-webkit-scrollbar { width: 4px; }
     #row-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
@@ -199,6 +215,14 @@
     <div id="edit-header">
       <h2>Edit Layout</h2>
       <button id="edit-close">&#x2715;</button>
+    </div>
+    <div id="edit-tools">
+      <button class="tool-btn" id="saveBtn" title="Save this layout to your browser">&#x1F4BE; Save</button>
+      <button class="tool-btn" id="exportBtn" title="Download layout as a file">&#x2B07; Export</button>
+      <button class="tool-btn" id="importBtn" title="Load a layout file">&#x2B06; Import</button>
+      <button class="tool-btn" id="resetBtn" title="Clear saved layout and restore the default">&#x21BA; Reset</button>
+      <span id="tool-status"></span>
+      <input type="file" id="importInput" accept="application/json,.json" hidden>
     </div>
     <button id="edit-add-row">+ Add Row</button>
     <div id="row-list"></div>
@@ -454,6 +478,63 @@
     parent.add(spr);
   }
 
+  // ── Persistence (localStorage + file import/export) ─────────────────────
+  var STORE_KEY = 'mnl-warehouse-layout-v1';
+
+  function collectState(){
+    return {
+      v: 1,
+      layout: layoutData.map(function(r){ return { levels: r.levels.slice(), x: r.x }; }),
+      full: skids.filter(function(s){ return s.userData.isFull; })
+                 .map(function(s){ return s.userData.locId; })
+    };
+  }
+  function saveLocal(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(collectState())); return true; }
+    catch(e){ return false; }
+  }
+  function loadLocal(){
+    try { var raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : null; }
+    catch(e){ return null; }
+  }
+  function applyLayout(state){
+    if(!state || !state.layout || !state.layout.length) return false;
+    layoutData.length = 0;
+    state.layout.forEach(function(r){
+      layoutData.push({ levels: (r.levels||[]).slice(), x: (typeof r.x==='number'? r.x : null) });
+    });
+    initPositions();
+    return true;
+  }
+  function applyFull(fullArr){
+    if(!fullArr) return;
+    var set = {};
+    fullArr.forEach(function(id){ set[id] = true; });
+    skids.forEach(function(s){
+      var f = !!set[s.userData.locId];
+      s.userData.isFull = f;
+      s.material.color.setHex(f ? C_FULL : C_EMPTY);
+    });
+    updateCounters();
+  }
+  function exportLayout(){
+    var json = JSON.stringify(collectState(), null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url; a.download = 'warehouse-layout.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  function flashStatus(msg, isErr){
+    var el = document.getElementById('tool-status');
+    if(!el) return;
+    el.textContent = msg;
+    el.style.color = isErr ? '#f87171' : '#4ade80';
+    clearTimeout(flashStatus._t);
+    flashStatus._t = setTimeout(function(){ el.textContent = ''; }, 2000);
+  }
+
   // ── Full rebuild ────────────────────────────────────────────────────────
   var bounds;
   function rebuild(){
@@ -463,7 +544,12 @@
     updateCounters();
     renderRowList();
   }
+
+  // Restore a previously-saved layout (this browser) before the first build
+  var bootState = loadLocal();
+  if(bootState) applyLayout(bootState);
   rebuild();
+  if(bootState) applyFull(bootState.full);
 
   var midZ = bounds.z0 + bounds.wD/2;
   controls.target.set(bounds.cx, 5, midZ);
@@ -649,11 +735,14 @@
   function openPanel(){
     editPanel.classList.add('open');
     editToggle.classList.add('active');
+    editToggle.style.display = 'none';   // hide floating toggle so it can't
+                                          // overlap the panel's tools bar
     legend.classList.add('shifted');
   }
   function closePanel(){
     editPanel.classList.remove('open');
     editToggle.classList.remove('active');
+    editToggle.style.display = '';
     legend.classList.remove('shifted');
     editMode = false;
     drag = null;
@@ -860,6 +949,52 @@
     selectedRow = layoutData.length-1;
     rebuild();
     document.getElementById('row-list').scrollTop = 999999;
+  });
+
+  // ── Save / Export / Import / Reset ──────────────────────────────────────
+  document.getElementById('saveBtn').addEventListener('click', function(){
+    var ok = saveLocal();
+    flashStatus(ok ? 'Saved ✓' : 'Save failed', !ok);
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', function(){
+    exportLayout();
+    flashStatus('Exported ✓');
+  });
+
+  document.getElementById('importBtn').addEventListener('click', function(){
+    document.getElementById('importInput').click();
+  });
+  document.getElementById('importInput').addEventListener('change', function(){
+    var file = this.files && this.files[0];
+    this.value = '';                      // allow re-importing the same file
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var state;
+      try { state = JSON.parse(reader.result); }
+      catch(e){ flashStatus('Invalid file', true); return; }
+      if(!applyLayout(state)){ flashStatus('Invalid file', true); return; }
+      selectedRow = null;
+      rebuild();
+      applyFull(state.full);
+      saveLocal();                        // persist the imported layout too
+      flashStatus('Imported ✓');
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if(!window.confirm('Discard your saved layout and restore the default?')) return;
+    try { localStorage.removeItem(STORE_KEY); } catch(e){}
+    layoutData.length = 0;
+    ROW_GROUPS.forEach(function(g){
+      for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice(), x: null });
+    });
+    initPositions();
+    selectedRow = null;
+    rebuild();
+    flashStatus('Reset to default ✓');
   });
 
   renderRowList();
