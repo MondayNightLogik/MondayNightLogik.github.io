@@ -226,7 +226,7 @@
       <input type="file" id="importInput" accept="application/json,.json" hidden>
     </div>
     <button id="move-toggle-btn">✕ Move Rows (drag)</button>
-    <button id="del-col-toggle-btn">✂ Delete Column</button>
+    <button id="del-col-toggle-btn">✂ Delete Upright</button>
     <button id="edit-add-row">+ Add Row</button>
     <div id="row-list"></div>
   </div>
@@ -298,7 +298,7 @@
   function collectState(){
     return {
       v: 1,
-      layout: layoutData.map(function(r){ return {levels:r.levels.slice(), x:r.x}; }),
+      layout: layoutData.map(function(r){ return {levels:r.levels.slice(), x:r.x, noFrames:(r.noFrames||[]).slice()}; }),
       full: skids.filter(function(s){ return s.userData.isFull; }).map(function(s){ return s.userData.id; })
     };
   }
@@ -312,7 +312,7 @@
   }
   function applyLayout(state){
     if(!state||!state.layout||!state.layout.length) return;
-    layoutData = state.layout.map(function(r){ return {levels:r.levels.slice(), x:r.x!==undefined?r.x:null}; });
+    layoutData = state.layout.map(function(r){ return {levels:r.levels.slice(), x:r.x!==undefined?r.x:null, noFrames:(r.noFrames||[]).slice()}; });
     initPositions();
   }
   function applyFull(fullArr){
@@ -424,7 +424,7 @@
   }
 
   // ── Scene objects ────────────────────────────────────────────────────────
-  var skids=[], rowGroups=[];
+  var skids=[], rowGroups=[], posts=[];
   var staticMeshes=[], floorMesh=null;
 
   function spotCol(mesh){ return mesh.userData.isFull ? C_FULL : C_EMPTY; }
@@ -438,7 +438,7 @@
 
   function buildRacks(){
     rowGroups.forEach(function(g){ scene.remove(g); });
-    rowGroups=[]; skids=[];
+    rowGroups=[]; skids=[]; posts=[];
 
     // x-sorted row numbering (R1 = leftmost)
     var sortedIdx=layoutData.map(function(_,i){return i;});
@@ -458,13 +458,25 @@
 
       var rowNum=rowNumByIndex[ri];
 
+      // Upright frames sit at each column boundary (Z-plane). Frame f spans
+      // the rack depth between column f-1 and column f; interior frames
+      // (1..nCols-1) are the supports "between pallet positions" and can be
+      // removed via row.noFrames. Each frame = front + back post.
+      var removed = row.noFrames || [];
+      for(var f=0; f<=nCols; f++){
+        if(removed.indexOf(f)>=0) continue;
+        var hl=Math.max((f-1>=0?cols[f-1]:0),(f<nCols?cols[f]:0));
+        if(hl<=0) continue;
+        var fz=z0+f*COL_Z;
+        [-RACK_D/2, RACK_D/2].forEach(function(px){
+          var post=box(UT,hl*LVL_H+UT,UT,C_POST,px,hl*LVL_H/2,fz);
+          post.userData={isFramePost:true, frameIdx:f, rowIndex:ri, nCols:nCols};
+          rg.add(post); posts.push(post);
+        });
+      }
+
       cols.forEach(function(nLvl,ci){
         var cz=z0+ci*COL_Z+COL_Z/2;
-        // upright posts
-        [[0,0],[RACK_D,0],[0,COL_Z],[RACK_D,COL_Z]].forEach(function(off){
-          var post=box(UT,nLvl*LVL_H+UT,UT,C_POST,off[0]-RACK_D/2,nLvl*LVL_H/2,cz-COL_Z/2+off[1]);
-          rg.add(post);
-        });
         for(var lv=0;lv<nLvl;lv++){
           var y=lv*LVL_H;
           // beams
@@ -935,15 +947,20 @@
 
   var editMode = false;
   var deleteMode = false;
-  var delHovered = null; // { rg, colIdx, meshes[] }
+  var delHovered = null; // { rowIndex, frameIdx, meshes[] }
+
+  function rowNumFor(ri){
+    var s=layoutData.map(function(_,i){return i;});
+    s.sort(function(a,b){return layoutData[a].x-layoutData[b].x;});
+    return s.indexOf(ri)+1;
+  }
 
   function clearDelHover(){
     if(delHovered){
-      delHovered.meshes.forEach(function(m){ m.material.color.setHex(spotCol(m)); });
+      delHovered.meshes.forEach(function(m){ m.material.color.setHex(C_POST); });
       delHovered=null;
     }
-    var tooltip=document.getElementById('tooltip');
-    tooltip.style.display='none';
+    document.getElementById('tooltip').style.display='none';
   }
 
   function enterDeleteMode(){
@@ -954,15 +971,13 @@
       mBtn.textContent='✕ Move Rows (drag)';
       mBtn.style.background=mBtn.style.borderColor=mBtn.style.color='';
       document.getElementById('drag-banner').classList.remove('show');
-      document.getElementById('hud-hint').textContent='Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
-      renderer.domElement.style.cursor='default';
       controls.enableRotate=true;
     }
     deleteMode=true;
     var btn=document.getElementById('del-col-toggle-btn');
     btn.classList.add('active');
     btn.textContent='✓ Done Deleting';
-    document.getElementById('hud-hint').textContent='DELETE MODE: click a column to remove it from its row';
+    document.getElementById('hud-hint').textContent='DELETE MODE: click an upright frame between two pallet positions to remove it';
     renderer.domElement.style.cursor='crosshair';
   }
   function exitDeleteMode(){
@@ -970,7 +985,7 @@
     clearDelHover();
     var btn=document.getElementById('del-col-toggle-btn');
     btn.classList.remove('active');
-    btn.textContent='✂ Delete Column';
+    btn.textContent='✂ Delete Upright';
     document.getElementById('hud-hint').textContent='Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
     renderer.domElement.style.cursor='default';
   }
@@ -979,28 +994,26 @@
     if(deleteMode){ exitDeleteMode(); } else { enterDeleteMode(); }
   });
 
-  // Delete-mode pointermove: highlight all spots in the hovered column
+  // Delete-mode pointermove: highlight the upright frame (both posts) under cursor
   renderer.domElement.addEventListener('pointermove', function(e){
     if(!deleteMode) return;
     mouse.x=(e.clientX/window.innerWidth)*2-1;
     mouse.y=-(e.clientY/window.innerHeight)*2+1;
     raycaster.setFromCamera(mouse,camera);
-    var hits=raycaster.intersectObjects(skids);
+    var hits=raycaster.intersectObjects(posts);
     if(!hits.length){ clearDelHover(); return; }
-    var s=hits[0].object;
-    var ri=ownerGroup(s)&&ownerGroup(s).userData.rowIndex;
-    var ci=s.userData.col;
-    if(delHovered && delHovered.rowIndex===ri && delHovered.colIdx===ci) return;
+    var p=hits[0].object;
+    var ri=p.userData.rowIndex, fi=p.userData.frameIdx, nC=p.userData.nCols;
+    // only interior frames are "between pallet positions"
+    if(fi<=0 || fi>=nC){ clearDelHover(); return; }
+    if(delHovered && delHovered.rowIndex===ri && delHovered.frameIdx===fi) return;
     clearDelHover();
-    // collect all spots in this column
-    var rg=ownerGroup(s);
-    if(!rg) return;
-    var colMeshes=skids.filter(function(m){ return ownerGroup(m)===rg && m.userData.col===ci; });
-    colMeshes.forEach(function(m){ m.material.color.setHex(0xef4444); });
-    delHovered={rowIndex:ri, colIdx:ci, meshes:colMeshes, rg:rg};
+    var frameMeshes=posts.filter(function(m){ return m.userData.rowIndex===ri && m.userData.frameIdx===fi; });
+    frameMeshes.forEach(function(m){ m.material.color.setHex(0xef4444); });
+    delHovered={rowIndex:ri, frameIdx:fi, meshes:frameMeshes};
     var tooltip=document.getElementById('tooltip');
-    document.getElementById('tt-loc').textContent='Row '+layoutData.map(function(_,i){return i;}).sort(function(a,b){return layoutData[a].x-layoutData[b].x;}).indexOf(ri+0)+1+' · Col '+ci;
-    document.getElementById('tt-status').textContent='Click to remove column';
+    document.getElementById('tt-loc').textContent='Row '+rowNumFor(ri)+' · upright between bay '+fi+' & '+(fi+1);
+    document.getElementById('tt-status').textContent='Click to remove upright';
     document.getElementById('tt-status').className='full';
     tooltip.style.display='block';
     tooltip.style.left=(e.clientX+16)+'px';
@@ -1008,16 +1021,16 @@
     renderer.domElement.style.cursor='crosshair';
   }, false);
 
-  // Delete-mode click: remove the hovered column from its row
+  // Delete-mode click: remove the hovered upright frame from its row
   renderer.domElement.addEventListener('click', function(e){
     if(!deleteMode) return;
     if(!delHovered) return;
-    var ri=delHovered.rowIndex;
-    var ci=delHovered.colIdx; // 1-based
-    delHovered=null; // clear before rebuild
+    var ri=delHovered.rowIndex, fi=delHovered.frameIdx;
+    delHovered=null;
     var row=layoutData[ri];
-    if(!row || row.levels.length<=1) return; // keep at least 1 column
-    row.levels.splice(ci-1,1);
+    if(!row) return;
+    if(!row.noFrames) row.noFrames=[];
+    if(row.noFrames.indexOf(fi)<0) row.noFrames.push(fi);
     rebuild();
   }, false);
 
