@@ -262,12 +262,11 @@
   }
 
   // ── Warehouse constants ─────────────────────────────────────────────────
-  // Each row is a single-deep rack running N→S (Z axis).
-  // A and B spots sit SIDE BY SIDE in Z (parallel to the aisle face).
-  // The row's depth in X = RACK_D (how deep the rack is from aisle to back).
+  // Each row is a single-deep rack. Columns are 1 pallet wide.
+  // A and B refer to the two rows of a back-to-back pair (one spot per column per row).
   var SPOT_W  = 1.1;           // pallet width in Z (along rack face / aisle direction)
-  var RACK_D  = 1.2;           // rack depth in X (perpendicular to aisle, into the rack)
-  var COL_Z   = SPOT_W * 2;    // bay Z-width = 2 pallets side by side = 2.2 m
+  var RACK_D  = 1.2;           // rack depth in X (perpendicular to aisle, single pallet deep)
+  var COL_Z   = SPOT_W;        // bay Z-width = 1 pallet wide = 1.1 m
   var LVL_H   = 2.0;
   var BACK_GAP = 0.22;
   var AISLE   = 4.5;
@@ -416,23 +415,21 @@
           rm(0.09, 0.09, COL_Z, mBeam,  RACK_D/2, by, bayMid);
         }
 
-        // Skid spots: A = south half of bay, B = north half, both at rack centre X
+        // One skid spot per bay per level (1 pallet wide, 1 deep)
         for(var lv=0; lv<levels; lv++){
-          var sy = lv*LVL_H + 0.09 + SPOT_H/2;
-          var py = lv*LVL_H + 0.045;
-          ['A','B'].forEach(function(side){
-            var sz    = bayZ0 + (side==='A' ? SPOT_W/2 : SPOT_W*1.5);
-            var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
-            var pm = new THREE.Mesh(geo(RACK_D-0.08, 0.09, SPOT_W-0.08), mPallet);
-            pm.position.set(0, py, sz);
-            rg.add(pm);
-            var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
-            var sp  = new THREE.Mesh(geo(RACK_D-0.12, SPOT_H, SPOT_W-0.12), mat);
-            sp.position.set(0, sy, sz);
-            sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1, side:side };
-            rg.add(sp);
-            skids.push(sp);
-          });
+          var sy    = lv*LVL_H + 0.09 + SPOT_H/2;
+          var py    = lv*LVL_H + 0.045;
+          var sz    = bayMid;
+          var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1);
+          var pm = new THREE.Mesh(geo(RACK_D-0.08, 0.09, SPOT_W-0.08), mPallet);
+          pm.position.set(0, py, sz);
+          rg.add(pm);
+          var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
+          var sp  = new THREE.Mesh(geo(RACK_D-0.12, SPOT_H, SPOT_W-0.12), mat);
+          sp.position.set(0, sy, sz);
+          sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1 };
+          rg.add(sp);
+          skids.push(sp);
         }
       });
 
