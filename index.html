@@ -426,7 +426,9 @@
         }
       });
 
-      makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_Z + 2.0);
+      // Offset label toward outer face so paired-row labels don't overlap
+      var labelX = (ri % 2 === 0) ? -(RACK_D/2 + 0.4) : (RACK_D/2 + 0.4);
+      makeRowLabel(rg, 'R'+rowNum, labelX, 2.2, z0 + cols.length*COL_Z + 2.0);
     });
   }
 
