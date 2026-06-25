@@ -365,6 +365,12 @@
 
     var z0 = b.z0;
 
+    // Assign row numbers left-to-right by X position (1 = leftmost)
+    var sortedIdx = layoutData.map(function(_,i){ return i; });
+    sortedIdx.sort(function(a,b){ return layoutData[a].x - layoutData[b].x; });
+    var rowNumByIndex = [];
+    sortedIdx.forEach(function(dataIdx, pos){ rowNumByIndex[dataIdx] = pos + 1; });
+
     layoutData.forEach(function(row, ri){
       var rg = new THREE.Group();
       rg.userData.rowIndex = ri;
@@ -373,7 +379,7 @@
       rowGroups.push(rg);
 
       var cols   = row.levels;
-      var rowNum = ri + 1;
+      var rowNum = rowNumByIndex[ri];
 
       function rm(w,h,d,mat,x,y,z){
         var m = new THREE.Mesh(geo(w,h,d), mat);
