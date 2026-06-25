@@ -208,6 +208,7 @@
       <button class="tool-btn" id="saveBtn">💾 Save</button>
       <button class="tool-btn" id="exportBtn">⬇ Export</button>
       <button class="tool-btn" id="importBtn">⬆ Import</button>
+      <button class="tool-btn" id="fitBtn" title="Evenly distribute all rows to fit the room">⤢ Fit Rows</button>
       <button class="tool-btn" id="resetBtn" title="Clear saved layout and restore the default">↺ Reset</button>
       <span id="tool-status"></span>
       <input type="file" id="importInput" accept="application/json,.json" hidden>
@@ -381,16 +382,32 @@
   }
 
   // ── Init rack positions ──────────────────────────────────────────────────
+  // Distribute back-to-back pairs evenly across the room width, compressing
+  // the aisle pitch when needed so everything fits inside the 300 ft footprint
+  // (never spaced wider than the natural PAIR_P).
+  function pairPitch(nPairs){
+    var margin=1.5;                       // gap from each side wall
+    var usable=ROOM_W-2*margin;
+    if(nPairs<=1) return 0;
+    return Math.min(PAIR_P, (usable-PAIR_W)/(nPairs-1));
+  }
   function initPositions(){
     var nPairs=Math.ceil(layoutData.length/2);
-    var wW=(nPairs-1)*PAIR_P+PAIR_W;
-    var fpX=-wW/2+PAIR_W/2;
+    var pitch=pairPitch(nPairs);
+    var span=(nPairs-1)*pitch+PAIR_W;
+    var fpX=-span/2+PAIR_W/2;              // centered at room center (x=0)
     layoutData.forEach(function(row,ri){
       if(row.x!==null) return;
       var pi=Math.floor(ri/2), side=ri%2;
-      var pc=fpX+pi*PAIR_P;
+      var pc=fpX+pi*pitch;
       row.x=pc+(side===0?-(BACK_GAP/2+RACK_D/2):(BACK_GAP/2+RACK_D/2));
     });
+  }
+  // Force every row back into an evenly-fitted arrangement (ignores any
+  // manual drag positions) — used by the "Fit Rows" button.
+  function fitRows(){
+    layoutData.forEach(function(row){ row.x=null; });
+    initPositions();
   }
 
   // ── Scene objects ────────────────────────────────────────────────────────
@@ -894,6 +911,12 @@
     layoutData = buildDefaultLayout();
     rebuild();
     flashStatus('Reset ✓');
+  });
+
+  document.getElementById('fitBtn').addEventListener('click', function(){
+    fitRows();    // nulls all x; rebuild's initPositions re-fits them
+    rebuild();
+    flashStatus('Fitted ✓');
   });
 
   var editMode = false;
