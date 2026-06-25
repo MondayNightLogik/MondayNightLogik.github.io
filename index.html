@@ -30,6 +30,8 @@
     #tt-status.empty { color: #4ade80; }
     #tt-status.full  { color: #f87171; }
     #tt-hint   { color: #444; font-size: 0.68rem; margin-top: 4px; }
+    #tt-part   { color: #c0caf5; font-size: 0.78rem; margin-top: 5px; }
+    #tt-qty    { color: #94a3b8; font-size: 0.72rem; }
 
     #sidebar {
       position: absolute; top: 56px; left: 12px;
@@ -222,8 +224,10 @@
       <button class="tool-btn" id="importBtn">⬆ Import</button>
       <button class="tool-btn" id="fitBtn" title="Evenly distribute all rows to fit the room">⤢ Fit Rows</button>
       <button class="tool-btn" id="resetBtn" title="Clear saved layout and restore the default">↺ Reset</button>
+      <button class="tool-btn" id="invImportBtn" title="Import inventory from Excel (.xlsx) or CSV">📦 Inventory</button>
       <span id="tool-status"></span>
       <input type="file" id="importInput" accept="application/json,.json" hidden>
+      <input type="file" id="invImportInput" accept=".xlsx,.xls,.csv" hidden>
     </div>
     <button id="move-toggle-btn">✕ Move Rows (drag)</button>
     <button id="del-col-toggle-btn">✂ Delete Upright</button>
@@ -246,12 +250,15 @@
   <div id="tooltip">
     <div id="tt-loc"></div>
     <div id="tt-status"></div>
+    <div id="tt-part"></div>
+    <div id="tt-qty"></div>
     <div id="tt-hint">Click to toggle</div>
   </div>
 </div>
 
 <script src="three.min.js"></script>
 <script src="OrbitControls.js"></script>
+<script src="xlsx.full.min.js"></script>
 <script>
 (function(){
   'use strict';
@@ -621,6 +628,14 @@
       var st=document.getElementById('tt-status');
       st.textContent=s.userData.isFull?'FULL':'EMPTY';
       st.className=s.userData.isFull?'full':'empty';
+      var ttPart=document.getElementById('tt-part');
+      var ttQty=document.getElementById('tt-qty');
+      if(s.userData.isFull && s.userData.partNum){
+        ttPart.textContent='Part: '+s.userData.partNum;
+        ttQty.textContent='Qty: '+(s.userData.qty!==undefined?s.userData.qty:'—');
+      } else {
+        ttPart.textContent=''; ttQty.textContent='';
+      }
       tooltip.style.display='block';
       tooltip.style.left=(e.clientX+16)+'px';
       tooltip.style.top =(e.clientY-12)+'px';
@@ -660,10 +675,14 @@
     if(editMode || deleteMode) return;
     if(!hovered) return;
     hovered.userData.isFull = !hovered.userData.isFull;
+    // Clear inventory data when manually toggled to empty
+    if(!hovered.userData.isFull){ hovered.userData.partNum=undefined; hovered.userData.qty=undefined; }
     hovered.material.color.setHex(spotCol(hovered));
     var st = document.getElementById('tt-status');
     st.textContent = hovered.userData.isFull ? 'FULL' : 'EMPTY';
     st.className   = hovered.userData.isFull ? 'full' : 'empty';
+    document.getElementById('tt-part').textContent='';
+    document.getElementById('tt-qty').textContent='';
     updateCounters();
   });
 
@@ -1042,6 +1061,94 @@
     if(row.noFrames.indexOf(fi)<0) row.noFrames.push(fi);
     rebuild();
   }, false);
+
+  // ── Inventory Import (Excel / CSV) ─────────────────────────────────────────
+  // Expected columns (case-insensitive, any order):
+  //   Location  — spot ID, e.g. "R1-C3-L2"  (Row-Column-Level)
+  //   Status    — "full" / "empty" / "1" / "0" / "yes" / "no"
+  //   Part      — part number string (optional)
+  //   Qty       — quantity number (optional)
+  //
+  // Any extra columns are ignored. Unmatched location IDs are skipped.
+
+  function normalizeHeader(h){
+    return String(h).trim().toLowerCase().replace(/[\s_#]/g,'');
+  }
+
+  function parseInventoryRows(rows){
+    if(!rows.length) return { ok:0, skip:0 };
+    // detect column indices from header row
+    var headers = rows[0].map(normalizeHeader);
+    var iLoc  = headers.findIndex(function(h){ return h==='location'||h==='loc'||h==='spotid'||h==='id'; });
+    var iStat = headers.findIndex(function(h){ return h==='status'||h==='state'||h==='full'||h==='filled'; });
+    var iPart = headers.findIndex(function(h){ return h==='part'||h==='partno'||h==='partnumber'||h==='partnum'||h==='sku'||h==='item'; });
+    var iQty  = headers.findIndex(function(h){ return h==='qty'||h==='quantity'||h==='count'||h==='amount'; });
+
+    if(iLoc<0 || iStat<0){
+      throw new Error('Sheet must have "Location" and "Status" columns. Found: '+rows[0].join(', '));
+    }
+
+    // build a lookup map from existing spot IDs
+    var spotMap = {};
+    skids.forEach(function(s){ spotMap[s.userData.id]=s; });
+
+    var ok=0, skip=0;
+    rows.slice(1).forEach(function(row){
+      var locRaw = row[iLoc];
+      if(locRaw===undefined||locRaw===null||String(locRaw).trim()==='') return;
+      var loc = String(locRaw).trim().toUpperCase().replace(/\s+/g,'');
+      var spot = spotMap[loc];
+      if(!spot){ skip++; return; }
+
+      var statRaw = String(row[iStat]||'').trim().toLowerCase();
+      var isFull = statRaw==='full'||statRaw==='filled'||statRaw==='yes'||statRaw==='y'||statRaw==='1'||statRaw==='true';
+
+      spot.userData.isFull = isFull;
+      spot.userData.partNum = (iPart>=0 && row[iPart]!==undefined && row[iPart]!==null)
+        ? String(row[iPart]).trim() : undefined;
+      spot.userData.qty = (iQty>=0 && row[iQty]!==undefined && row[iQty]!==null && String(row[iQty]).trim()!=='')
+        ? String(row[iQty]).trim() : undefined;
+      spot.material.color.setHex(spotCol(spot));
+      ok++;
+    });
+
+    updateCounters();
+    return { ok:ok, skip:skip };
+  }
+
+  document.getElementById('invImportBtn').addEventListener('click', function(){
+    document.getElementById('invImportInput').click();
+  });
+
+  document.getElementById('invImportInput').addEventListener('change', function(){
+    var file = this.files && this.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        var wb, rows;
+        if(file.name.toLowerCase().endsWith('.csv')){
+          // CSV: parse manually via SheetJS
+          wb = XLSX.read(ev.target.result, {type:'string'});
+        } else {
+          wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+        }
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        var result = parseInventoryRows(rows);
+        flashStatus('Inventory: '+result.ok+' updated'+(result.skip?' ('+result.skip+' skipped)':''));
+      } catch(err){
+        flashStatus('Import error: '+err.message, true);
+        console.error(err);
+      }
+    };
+    if(file.name.toLowerCase().endsWith('.csv')){
+      reader.readAsText(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
+    this.value='';
+  });
 
   renderRowList();
 })();
