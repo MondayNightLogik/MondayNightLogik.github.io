@@ -541,7 +541,6 @@
         drag.rg.position.x = newX;
         layoutData[drag.rowIndex].x = newX;
         renderer.domElement.style.cursor = 'grabbing';
-        renderRowList();
       } else {
         var hits = raycaster.intersectObjects(allRackMeshes());
         if(hits.length){
@@ -670,9 +669,13 @@
         btn.style.borderColor = '#3b82f6';
         btn.style.color = '#93c5fd';
         dragBanner.classList.add('show');
-        hudHint.textContent = '✕ MOVE MODE: click+drag any row to reposition it';
+        hudHint.textContent = '✕ MOVE MODE: drag rows left/right  |  Exit to restore orbit';
         renderer.domElement.style.cursor = 'grab';
         controls.enabled = false;
+        // Switch to top-down view so horizontal drag = world X movement
+        camera.position.set(bounds.cx, 250, bounds.z0 + bounds.wD/2 + 0.01);
+        controls.target.set(bounds.cx, 5, bounds.z0 + bounds.wD/2);
+        controls.update();
       } else {
         btn.textContent = '✕ Move Rows (drag)';
         btn.style.background = '';
