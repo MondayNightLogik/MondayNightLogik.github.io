@@ -178,6 +178,18 @@
       flex-shrink: 0;
     }
     #move-toggle-btn:hover { background: rgba(234,179,8,0.2); }
+
+    #del-col-toggle-btn {
+      width: calc(100% - 20px); margin: 0 10px 4px;
+      background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; padding: 6px; border-radius: 6px;
+      font-size: 0.72rem; cursor: pointer; transition: all 0.12s;
+      flex-shrink: 0;
+    }
+    #del-col-toggle-btn:hover { background: rgba(239,68,68,0.2); }
+    #del-col-toggle-btn.active {
+      background: rgba(239,68,68,0.35); border-color: #ef4444; color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -214,6 +226,7 @@
       <input type="file" id="importInput" accept="application/json,.json" hidden>
     </div>
     <button id="move-toggle-btn">✕ Move Rows (drag)</button>
+    <button id="del-col-toggle-btn">✂ Delete Column</button>
     <button id="edit-add-row">+ Add Row</button>
     <div id="row-list"></div>
   </div>
@@ -585,7 +598,7 @@
       return;
     }
 
-    if(editMode) return;
+    if(editMode || deleteMode) return;
     raycaster.setFromCamera(mouse, camera);
     var hits = raycaster.intersectObjects(skids);
     var tooltip = document.getElementById('tooltip');
@@ -632,7 +645,7 @@
   });
 
   renderer.domElement.addEventListener('click', function(){
-    if(editMode) return;
+    if(editMode || deleteMode) return;
     if(!hovered) return;
     hovered.userData.isFull = !hovered.userData.isFull;
     hovered.material.color.setHex(spotCol(hovered));
@@ -691,6 +704,7 @@
     legend.classList.remove('shifted');
     editMode = false;
     drag = null;
+    if(deleteMode) exitDeleteMode();
     controls.enabled = true;
     controls.enableRotate = true;
     clearHighlight();
@@ -920,6 +934,93 @@
   });
 
   var editMode = false;
+  var deleteMode = false;
+  var delHovered = null; // { rg, colIdx, meshes[] }
+
+  function clearDelHover(){
+    if(delHovered){
+      delHovered.meshes.forEach(function(m){ m.material.color.setHex(spotCol(m)); });
+      delHovered=null;
+    }
+    var tooltip=document.getElementById('tooltip');
+    tooltip.style.display='none';
+  }
+
+  function enterDeleteMode(){
+    // exit move mode first if active
+    if(editMode){
+      editMode=false;
+      var mBtn=document.getElementById('move-toggle-btn');
+      mBtn.textContent='✕ Move Rows (drag)';
+      mBtn.style.background=mBtn.style.borderColor=mBtn.style.color='';
+      document.getElementById('drag-banner').classList.remove('show');
+      document.getElementById('hud-hint').textContent='Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
+      renderer.domElement.style.cursor='default';
+      controls.enableRotate=true;
+    }
+    deleteMode=true;
+    var btn=document.getElementById('del-col-toggle-btn');
+    btn.classList.add('active');
+    btn.textContent='✓ Done Deleting';
+    document.getElementById('hud-hint').textContent='DELETE MODE: click a column to remove it from its row';
+    renderer.domElement.style.cursor='crosshair';
+  }
+  function exitDeleteMode(){
+    deleteMode=false;
+    clearDelHover();
+    var btn=document.getElementById('del-col-toggle-btn');
+    btn.classList.remove('active');
+    btn.textContent='✂ Delete Column';
+    document.getElementById('hud-hint').textContent='Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
+    renderer.domElement.style.cursor='default';
+  }
+
+  document.getElementById('del-col-toggle-btn').addEventListener('click', function(){
+    if(deleteMode){ exitDeleteMode(); } else { enterDeleteMode(); }
+  });
+
+  // Delete-mode pointermove: highlight all spots in the hovered column
+  renderer.domElement.addEventListener('pointermove', function(e){
+    if(!deleteMode) return;
+    mouse.x=(e.clientX/window.innerWidth)*2-1;
+    mouse.y=-(e.clientY/window.innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(skids);
+    if(!hits.length){ clearDelHover(); return; }
+    var s=hits[0].object;
+    var ri=ownerGroup(s)&&ownerGroup(s).userData.rowIndex;
+    var ci=s.userData.col;
+    if(delHovered && delHovered.rowIndex===ri && delHovered.colIdx===ci) return;
+    clearDelHover();
+    // collect all spots in this column
+    var rg=ownerGroup(s);
+    if(!rg) return;
+    var colMeshes=skids.filter(function(m){ return ownerGroup(m)===rg && m.userData.col===ci; });
+    colMeshes.forEach(function(m){ m.material.color.setHex(0xef4444); });
+    delHovered={rowIndex:ri, colIdx:ci, meshes:colMeshes, rg:rg};
+    var tooltip=document.getElementById('tooltip');
+    document.getElementById('tt-loc').textContent='Row '+layoutData.map(function(_,i){return i;}).sort(function(a,b){return layoutData[a].x-layoutData[b].x;}).indexOf(ri+0)+1+' · Col '+ci;
+    document.getElementById('tt-status').textContent='Click to remove column';
+    document.getElementById('tt-status').className='full';
+    tooltip.style.display='block';
+    tooltip.style.left=(e.clientX+16)+'px';
+    tooltip.style.top=(e.clientY-12)+'px';
+    renderer.domElement.style.cursor='crosshair';
+  }, false);
+
+  // Delete-mode click: remove the hovered column from its row
+  renderer.domElement.addEventListener('click', function(e){
+    if(!deleteMode) return;
+    if(!delHovered) return;
+    var ri=delHovered.rowIndex;
+    var ci=delHovered.colIdx; // 1-based
+    delHovered=null; // clear before rebuild
+    var row=layoutData[ri];
+    if(!row || row.levels.length<=1) return; // keep at least 1 column
+    row.levels.splice(ci-1,1);
+    rebuild();
+  }, false);
+
   renderRowList();
 })();
 </script>
