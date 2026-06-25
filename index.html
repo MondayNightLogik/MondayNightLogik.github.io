@@ -766,8 +766,9 @@
       item.appendChild(header);
       item.appendChild(pills);
       if(selectedRow===ri) item.appendChild(buildRowEditor(ri));
-      // Clicking the row header area toggles open/closed
-      item.addEventListener('click', function(){
+      // Toggle open/closed only when clicking the header row (label/meta area), not the editor
+      header.addEventListener('click', function(e){
+        if(e.target.closest('.row-actions')) return; // Edit/Dup/Del handle themselves
         selectedRow = (selectedRow===ri) ? null : ri;
         renderRowList();
         var items = document.querySelectorAll('.row-item');
