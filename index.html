@@ -586,7 +586,6 @@
     if(!rg) return;
     raycaster.ray.intersectPlane(floorPlane, floorPt);
     drag = { rg: rg, rowIndex: rg.userData.rowIndex, offsetX: floorPt.x - rg.position.x };
-    controls.enabled = false;
     e.preventDefault();
   });
 
@@ -594,7 +593,6 @@
     if(drag){
       layoutData[drag.rowIndex].x = drag.rg.position.x;
       drag = null;
-      controls.enabled = true;
       renderRowList();
     }
   });
@@ -668,8 +666,9 @@
         btn.style.borderColor = '#3b82f6';
         btn.style.color = '#93c5fd';
         dragBanner.classList.add('show');
-        hudHint.textContent = '✕ MOVE MODE: click+drag any row  |  Orbit still works on empty floor';
+        hudHint.textContent = '✕ MOVE MODE: click+drag any row to reposition it';
         renderer.domElement.style.cursor = 'grab';
+        controls.enabled = false;
       } else {
         btn.textContent = '✕ Move Rows (drag)';
         btn.style.background = '';
@@ -678,6 +677,7 @@
         dragBanner.classList.remove('show');
         hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
         renderer.domElement.style.cursor = 'default';
+        controls.enabled = true;
         clearHighlight();
         bounds = computeBounds();
         buildStatic(bounds);
