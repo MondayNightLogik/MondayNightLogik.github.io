@@ -528,6 +528,7 @@
   }
 
   renderer.domElement.addEventListener('mousemove', function(e){
+    if(editMode && drag){ e.stopPropagation(); }
     mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
@@ -575,8 +576,12 @@
     }
   });
 
+  // Capture phase so this fires before OrbitControls sees the event
   renderer.domElement.addEventListener('mousedown', function(e){
     if(!editMode) return;
+    // Prevent OrbitControls from starting pan/rotate during move mode
+    e.preventDefault();
+    e.stopPropagation();
     mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
@@ -586,8 +591,7 @@
     if(!rg) return;
     raycaster.ray.intersectPlane(floorPlane, floorPt);
     drag = { rg: rg, rowIndex: rg.userData.rowIndex, offsetX: floorPt.x - rg.position.x };
-    e.preventDefault();
-  });
+  }, true);
 
   window.addEventListener('mouseup', function(){
     if(drag){
