@@ -111,11 +111,13 @@
 
     .row-item {
       padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
-      cursor: pointer; transition: background 0.1s;
     }
-    .row-item:hover { background: rgba(255,255,255,0.03); }
     .row-item.selected { background: rgba(59,130,246,0.12); border-left: 2px solid #3b82f6; }
-    .row-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .row-item-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+      cursor: pointer;
+    }
+    .row-item-header:hover { opacity: 0.85; }
     .row-label { color: #93c5fd; font-size: 0.78rem; font-weight: 600; }
     .row-meta  { color: #555; font-size: 0.65rem; }
     .row-actions { display: flex; gap: 4px; }
@@ -130,7 +132,7 @@
     .col-pills { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
     .col-pill { background: rgba(255,255,255,0.06); border-radius: 3px; padding: 1px 6px; font-size: 0.65rem; color: #888; }
 
-    .row-editor { background: rgba(15,15,40,0.8); border-top: 1px solid rgba(255,255,255,0.06); padding: 10px 12px; }
+    .row-editor { background: rgba(15,15,40,0.8); border-top: 1px solid rgba(255,255,255,0.06); padding: 10px 12px; margin-top: 4px; }
     .editor-title { color: #7dd3fc; font-size: 0.72rem; font-weight: 600; margin-bottom: 8px; }
     .col-editors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
     .col-editor { display: flex; flex-direction: column; align-items: center; gap: 3px; }
@@ -322,20 +324,16 @@
     var pad = 12;
     var fW = b.wW + pad*2, fD = b.wD + pad*2;
     var cx = b.cx, cz = b.z0 + b.wD/2;
-
     var fl = new THREE.Mesh(geo(fW, 0.2, fD), mFloor);
     fl.position.set(cx, -0.1, cz);
     staticGroup.add(fl);
-
     var gs = Math.ceil(Math.max(fW, fD)) + 20;
     var g1 = new THREE.GridHelper(gs, gs, 0x1e3a4a, 0x1e3a4a);
     g1.position.set(cx, 0.01, cz);
     staticGroup.add(g1);
-
     var g5 = new THREE.GridHelper(gs, Math.ceil(gs/5), 0x2a5a7a, 0x2a5a7a);
     g5.position.set(cx, 0.02, cz);
     staticGroup.add(g5);
-
     var WH = b.maxC * LVL_H + 4;
     function wall(w,h,d,x,y,z){ var m=new THREE.Mesh(geo(w,h,d),mWall); m.position.set(x,y,z); staticGroup.add(m); }
     wall(fW, WH, 0.3, cx, WH/2, b.z0-2);
@@ -349,28 +347,20 @@
 
   function buildRacks(b){
     while(rackGroup.children.length) rackGroup.remove(rackGroup.children[0]);
-    skids     = [];
-    rowGroups = [];
-
+    skids = []; rowGroups = [];
     var z0 = b.z0;
-
     layoutData.forEach(function(row, ri){
       var rg = new THREE.Group();
       rg.userData.rowIndex = ri;
       rg.position.x = row.x;
       rackGroup.add(rg);
       rowGroups.push(rg);
-
-      var cols   = row.levels;
+      var cols = row.levels;
       var rowNum = ri + 1;
-
       function rm(w,h,d,mat,x,y,z){
         var m = new THREE.Mesh(geo(w,h,d), mat);
-        m.position.set(x,y,z);
-        rg.add(m);
-        return m;
+        m.position.set(x,y,z); rg.add(m); return m;
       }
-
       for(var ci=0; ci<=cols.length; ci++){
         var uz = z0 + ci*COL_Z;
         var lH = ci>0           ? cols[ci-1]*LVL_H : 0;
@@ -380,35 +370,27 @@
         rm(UT, upH, UT, mUpright, -RACK_D/2, upH/2, uz);
         rm(UT, upH, UT, mUpright,  RACK_D/2, upH/2, uz);
       }
-
       cols.forEach(function(levels, ci){
         var cz   = z0 + ci*COL_Z;
         var midZ = cz + COL_Z/2;
-
         for(var lv=1; lv<=levels; lv++){
           var by = lv*LVL_H - 0.08;
           rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz);
           rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz+COL_Z);
         }
-
         for(var lv=0; lv<levels; lv++){
           var sy    = lv*LVL_H + 0.09 + SPOT_H/2;
           var py    = lv*LVL_H + 0.045;
           var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1);
-
           var pm = new THREE.Mesh(geo(RACK_D-0.08, 0.09, COL_Z-0.08), mPallet);
-          pm.position.set(0, py, midZ);
-          rg.add(pm);
-
+          pm.position.set(0, py, midZ); rg.add(pm);
           var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
           var sp  = new THREE.Mesh(geo(RACK_D-0.12, SPOT_H, COL_Z-0.12), mat);
           sp.position.set(0, sy, midZ);
           sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1 };
-          rg.add(sp);
-          skids.push(sp);
+          rg.add(sp); skids.push(sp);
         }
       });
-
       makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_Z + 2.0);
     });
   }
@@ -423,15 +405,12 @@
     if(ctx.roundRect) ctx.roundRect(4,4,120,56,10);
     else ctx.rect(4,4,120,56);
     ctx.fill();
-    ctx.fillStyle='#111';
-    ctx.font='bold 30px Arial';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
+    ctx.fillStyle='#111'; ctx.font='bold 30px Arial';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(text,64,34);
     var tex = new THREE.CanvasTexture(cv);
     var spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
-    spr.scale.set(2.4, 1.2, 1);
-    spr.position.set(x,y,z);
+    spr.scale.set(2.4, 1.2, 1); spr.position.set(x,y,z);
     parent.add(spr);
   }
 
@@ -457,13 +436,10 @@
     document.getElementById('ct').textContent = skids.length;
   }
 
-  var hlRow = null;
-  var hlSaved = [];
-
+  var hlRow = null, hlSaved = [];
   function highlightRow(rg){
     if(hlRow === rg) return;
-    clearHighlight();
-    hlRow = rg;
+    clearHighlight(); hlRow = rg;
     rg.children.forEach(function(m){
       if(!m.isMesh || m.userData.locId) return;
       hlSaved.push({ m:m, c:m.material.color.getHex() });
@@ -474,10 +450,8 @@
   function clearHighlight(){
     if(!hlRow) return;
     hlSaved.forEach(function(e){ e.m.material.color.setHex(e.c); });
-    hlSaved = [];
-    hlRow = null;
+    hlSaved = []; hlRow = null;
   }
-
   function ownerGroup(mesh){
     for(var i=0; i<rowGroups.length; i++){
       if(rowGroups[i].children.indexOf(mesh) !== -1) return rowGroups[i];
@@ -486,16 +460,14 @@
   }
 
   var raycaster = new THREE.Raycaster();
-  var mouse     = new THREE.Vector2();
-  var hovered   = null;
-  var tooltip   = document.getElementById('tooltip');
-
+  var mouse = new THREE.Vector2();
+  var hovered = null;
+  var tooltip = document.getElementById('tooltip');
   function spotCol(s){ return s.userData.isFull ? C_FULL : C_EMPTY; }
 
-  var editMode = false;
-  var drag = null;
+  var editMode = false, drag = null;
   var floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
-  var floorPt    = new THREE.Vector3();
+  var floorPt = new THREE.Vector3();
 
   function allRackMeshes(){
     var out = [];
@@ -507,7 +479,6 @@
     mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-
     if(editMode){
       tooltip.style.display = 'none';
       if(drag){
@@ -519,18 +490,11 @@
         renderRowList();
       } else {
         var hits = raycaster.intersectObjects(allRackMeshes());
-        if(hits.length){
-          var rg = ownerGroup(hits[0].object);
-          if(rg) highlightRow(rg);
-          renderer.domElement.style.cursor = 'grab';
-        } else {
-          clearHighlight();
-          renderer.domElement.style.cursor = 'default';
-        }
+        if(hits.length){ var rg = ownerGroup(hits[0].object); if(rg) highlightRow(rg); renderer.domElement.style.cursor = 'grab'; }
+        else { clearHighlight(); renderer.domElement.style.cursor = 'default'; }
       }
       return;
     }
-
     if(hovered){ hovered.material.color.setHex(spotCol(hovered)); hovered=null; }
     var hits = raycaster.intersectObjects(skids);
     if(hits.length){
@@ -562,22 +526,15 @@
     if(!rg) return;
     raycaster.ray.intersectPlane(floorPlane, floorPt);
     drag = { rg: rg, rowIndex: rg.userData.rowIndex, offsetX: floorPt.x - rg.position.x };
-    controls.enabled = false;
-    e.preventDefault();
+    controls.enabled = false; e.preventDefault();
   });
 
   window.addEventListener('mouseup', function(){
-    if(drag){
-      layoutData[drag.rowIndex].x = drag.rg.position.x;
-      drag = null;
-      controls.enabled = true;
-      renderRowList();
-    }
+    if(drag){ layoutData[drag.rowIndex].x = drag.rg.position.x; drag = null; controls.enabled = true; renderRowList(); }
   });
 
   renderer.domElement.addEventListener('click', function(){
-    if(editMode) return;
-    if(!hovered) return;
+    if(editMode || !hovered) return;
     hovered.userData.isFull = !hovered.userData.isFull;
     hovered.material.color.setHex(spotCol(hovered));
     var st = document.getElementById('tt-status');
@@ -594,14 +551,8 @@
   document.getElementById('vTop').onclick  = function(){ cam(bounds.cx, 250, bounds.z0+bounds.wD/2+0.01); };
   document.getElementById('vIso').onclick  = function(){ cam(bounds.cx-40, 100, bounds.z0+bounds.wD/2+130); };
   document.getElementById('vSide').onclick = function(){ cam(bounds.minX-80, 60, bounds.z0+bounds.wD/2); };
-  document.getElementById('bReset').onclick= function(){
-    skids.forEach(function(s){ s.userData.isFull=false; s.material.color.setHex(C_EMPTY); });
-    updateCounters();
-  };
-  document.getElementById('bFill').onclick = function(){
-    skids.forEach(function(s){ s.userData.isFull=true; s.material.color.setHex(C_FULL); });
-    updateCounters();
-  };
+  document.getElementById('bReset').onclick= function(){ skids.forEach(function(s){ s.userData.isFull=false; s.material.color.setHex(C_EMPTY); }); updateCounters(); };
+  document.getElementById('bFill').onclick = function(){ skids.forEach(function(s){ s.userData.isFull=true; s.material.color.setHex(C_FULL); }); updateCounters(); };
 
   var editPanel  = document.getElementById('edit-panel');
   var editToggle = document.getElementById('edit-toggle');
@@ -610,26 +561,14 @@
   var hudHint    = document.getElementById('hud-hint');
   var selectedRow = null;
 
-  function openPanel(){
-    editPanel.classList.add('open');
-    editToggle.classList.add('active');
-    legend.classList.add('shifted');
-  }
+  function openPanel(){ editPanel.classList.add('open'); editToggle.classList.add('active'); legend.classList.add('shifted'); }
   function closePanel(){
-    editPanel.classList.remove('open');
-    editToggle.classList.remove('active');
-    legend.classList.remove('shifted');
-    editMode = false;
-    drag = null;
-    controls.enabled = true;
-    clearHighlight();
+    editPanel.classList.remove('open'); editToggle.classList.remove('active'); legend.classList.remove('shifted');
+    editMode = false; drag = null; controls.enabled = true; clearHighlight();
     dragBanner.classList.remove('show');
     hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
   }
-
-  editToggle.addEventListener('click', function(){
-    if(editPanel.classList.contains('open')){ closePanel(); } else { openPanel(); }
-  });
+  editToggle.addEventListener('click', function(){ if(editPanel.classList.contains('open')){ closePanel(); } else { openPanel(); } });
   document.getElementById('edit-close').addEventListener('click', closePanel);
 
   document.getElementById('edit-panel').addEventListener('click', function(e){
@@ -638,29 +577,29 @@
       var btn = document.getElementById('move-toggle-btn');
       if(editMode){
         btn.textContent = '✓ Done Moving Rows';
-        btn.style.background = 'rgba(59,130,246,0.25)';
-        btn.style.borderColor = '#3b82f6';
-        btn.style.color = '#93c5fd';
+        btn.style.cssText += ';background:rgba(59,130,246,0.25);border-color:#3b82f6;color:#93c5fd;';
         dragBanner.classList.add('show');
         hudHint.textContent = '✕ MOVE MODE: click+drag any row  |  Orbit still works on empty floor';
         renderer.domElement.style.cursor = 'grab';
       } else {
         btn.textContent = '✕ Move Rows (drag)';
-        btn.style.background = '';
-        btn.style.borderColor = '';
-        btn.style.color = '';
+        btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = '';
         dragBanner.classList.remove('show');
         hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
         renderer.domElement.style.cursor = 'default';
-        clearHighlight();
-        bounds = computeBounds();
-        buildStatic(bounds);
+        clearHighlight(); bounds = computeBounds(); buildStatic(bounds);
       }
     }
   });
 
-  function rowSpotCount(row){
-    return row.levels.reduce(function(a,n){ return a+n; }, 0);
+  function rowSpotCount(row){ return row.levels.reduce(function(a,n){ return a+n; }, 0); }
+
+  function openRowEditor(ri){
+    selectedRow = ri;
+    renderRowList();
+    // Scroll the opened item into view
+    var items = document.querySelectorAll('.row-item');
+    if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
   }
 
   function renderRowList(){
@@ -671,11 +610,7 @@
     moveBtn.id = 'move-toggle-btn';
     moveBtn.textContent = editMode ? '✓ Done Moving Rows' : '✕ Move Rows (drag)';
     moveBtn.style.cssText = 'display:block;width:calc(100% - 24px);margin:0 12px 10px;padding:7px 14px;border-radius:6px;font-size:0.75rem;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#aaa;transition:all 0.14s;';
-    if(editMode){
-      moveBtn.style.background = 'rgba(59,130,246,0.25)';
-      moveBtn.style.borderColor = '#3b82f6';
-      moveBtn.style.color = '#93c5fd';
-    }
+    if(editMode){ moveBtn.style.background='rgba(59,130,246,0.25)'; moveBtn.style.borderColor='#3b82f6'; moveBtn.style.color='#93c5fd'; }
     list.appendChild(moveBtn);
 
     layoutData.forEach(function(row, ri){
@@ -698,20 +633,13 @@
 
       var editBtn = document.createElement('button');
       editBtn.className = 'edit-btn'; editBtn.textContent = 'Edit';
-      editBtn.addEventListener('click', function(e){
-        e.stopPropagation();
-        selectedRow = ri;
-        renderRowList();
-        var items = document.querySelectorAll('.row-item');
-        if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
-      });
+      editBtn.addEventListener('click', function(e){ e.stopPropagation(); openRowEditor(ri); });
 
       var dupBtn = document.createElement('button');
       dupBtn.className = 'dup-btn'; dupBtn.textContent = 'Dup';
       dupBtn.addEventListener('click', function(e){
         e.stopPropagation();
-        var newRow = { levels: row.levels.slice(), x: row.x + PAIR_P };
-        layoutData.splice(ri+1, 0, newRow);
+        layoutData.splice(ri+1, 0, { levels: row.levels.slice(), x: row.x + PAIR_P });
         selectedRow = ri;
         rebuild();
       });
@@ -727,12 +655,19 @@
         rebuild();
       });
 
-      actions.appendChild(editBtn);
-      actions.appendChild(dupBtn);
-      actions.appendChild(delBtn);
-      header.appendChild(label);
-      header.appendChild(meta);
-      header.appendChild(actions);
+      actions.appendChild(editBtn); actions.appendChild(dupBtn); actions.appendChild(delBtn);
+      header.appendChild(label); header.appendChild(meta); header.appendChild(actions);
+
+      // Toggle only fires when clicking the header row (label/meta), not the action buttons or editor
+      header.addEventListener('click', function(e){
+        if(e.target.closest('.row-actions')) return;
+        selectedRow = (selectedRow===ri) ? null : ri;
+        renderRowList();
+        if(selectedRow===ri){
+          var items = document.querySelectorAll('.row-item');
+          if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
+        }
+      });
 
       var pills = document.createElement('div');
       pills.className = 'col-pills';
@@ -746,12 +681,6 @@
       item.appendChild(header);
       item.appendChild(pills);
       if(selectedRow===ri) item.appendChild(buildRowEditor(ri));
-      item.addEventListener('click', function(){
-        selectedRow = (selectedRow===ri) ? null : ri;
-        renderRowList();
-        var items = document.querySelectorAll('.row-item');
-        if(selectedRow===ri && items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
-      });
       list.appendChild(item);
     });
   }
@@ -781,7 +710,8 @@
           if(v>=1&&v<=12) row.levels[ci]=v; else inp.value=row.levels[ci];
         });
         var delC = document.createElement('button'); delC.className='del-col'; delC.textContent='✕';
-        delC.addEventListener('click',function(){
+        delC.addEventListener('click',function(e){
+          e.stopPropagation();
           if(row.levels.length<=1) return;
           row.levels.splice(ci,1); refreshColEditors();
         });
@@ -795,13 +725,16 @@
     var btns = document.createElement('div'); btns.className='editor-btns';
 
     var addCol = document.createElement('button'); addCol.className='editor-btn add-col'; addCol.textContent='+ Column';
-    addCol.addEventListener('click',function(){ row.levels.push(row.levels[row.levels.length-1]||4); refreshColEditors(); });
+    addCol.addEventListener('click',function(e){
+      e.stopPropagation();
+      row.levels.push(row.levels[row.levels.length-1]||4); refreshColEditors();
+    });
 
     var apply = document.createElement('button'); apply.className='editor-btn apply'; apply.textContent='✓ Apply';
-    apply.addEventListener('click',function(){ selectedRow=null; rebuild(); });
+    apply.addEventListener('click',function(e){ e.stopPropagation(); selectedRow=null; rebuild(); });
 
     var cancel = document.createElement('button'); cancel.className='editor-btn cancel'; cancel.textContent='Cancel';
-    cancel.addEventListener('click',function(){ selectedRow=null; renderRowList(); });
+    cancel.addEventListener('click',function(e){ e.stopPropagation(); selectedRow=null; renderRowList(); });
 
     btns.appendChild(addCol); btns.appendChild(apply); btns.appendChild(cancel);
     editor.appendChild(btns);
