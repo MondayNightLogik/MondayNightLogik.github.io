@@ -703,20 +703,34 @@
       var header = document.createElement('div');
       header.className = 'row-item-header';
 
-      var label = document.createElement('span');
-      label.className = 'row-label';
-      label.textContent = 'Row ' + (ri+1);
+      // Info area: clicking it toggles the editor open/closed
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0;cursor:pointer;';
+      info.addEventListener('click', function(){
+        selectedRow = (selectedRow===ri) ? null : ri;
+        renderRowList();
+        if(selectedRow===ri){
+          var items = document.querySelectorAll('.row-item');
+          if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
+        }
+      });
 
-      var meta = document.createElement('span');
+      var label = document.createElement('div');
+      label.className = 'row-label';
+      label.textContent = (selectedRow===ri ? '▾ ' : '▸ ') + 'Row ' + (ri+1);
+
+      var meta = document.createElement('div');
       meta.className = 'row-meta';
       meta.textContent = rowSpotCount(row)+' spots  x='+row.x.toFixed(1)+'m';
+
+      info.appendChild(label);
+      info.appendChild(meta);
 
       var actions = document.createElement('div');
       actions.className = 'row-actions';
 
       var editBtn = document.createElement('button');
       editBtn.className = 'edit-btn'; editBtn.textContent = 'Edit';
-      // Always open the editor (never toggle closed) when clicking Edit
       editBtn.addEventListener('click', function(e){
         e.stopPropagation();
         selectedRow = ri;
@@ -729,9 +743,7 @@
       dupBtn.className = 'dup-btn'; dupBtn.textContent = 'Dup';
       dupBtn.addEventListener('click', function(e){
         e.stopPropagation();
-        var newRow = { levels: row.levels.slice(), x: row.x + PAIR_P };
-        layoutData.splice(ri+1, 0, newRow);
-        // Keep the original row selected so the panel stays open
+        layoutData.splice(ri+1, 0, { levels: row.levels.slice(), x: row.x + PAIR_P });
         selectedRow = ri;
         rebuild();
       });
@@ -750,30 +762,11 @@
       actions.appendChild(editBtn);
       actions.appendChild(dupBtn);
       actions.appendChild(delBtn);
-      header.appendChild(label);
-      header.appendChild(meta);
+      header.appendChild(info);
       header.appendChild(actions);
 
-      var pills = document.createElement('div');
-      pills.className = 'col-pills';
-      row.levels.forEach(function(n,ci){
-        var p = document.createElement('span');
-        p.className = 'col-pill';
-        p.textContent = 'C'+(ci+1)+':'+n+'L';
-        pills.appendChild(p);
-      });
-
       item.appendChild(header);
-      item.appendChild(pills);
       if(selectedRow===ri) item.appendChild(buildRowEditor(ri));
-      // Toggle open/closed only when clicking the header row (label/meta area), not the editor
-      header.addEventListener('click', function(e){
-        if(e.target.closest('.row-actions')) return; // Edit/Dup/Del handle themselves
-        selectedRow = (selectedRow===ri) ? null : ri;
-        renderRowList();
-        var items = document.querySelectorAll('.row-item');
-        if(selectedRow===ri && items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
-      });
       list.appendChild(item);
     });
   }
@@ -803,7 +796,8 @@
           if(v>=1&&v<=12) row.levels[ci]=v; else inp.value=row.levels[ci];
         });
         var delC = document.createElement('button'); delC.className='del-col'; delC.textContent='✕';
-        delC.addEventListener('click',function(){
+        delC.addEventListener('click',function(e){
+          e.stopPropagation();
           if(row.levels.length<=1) return;
           row.levels.splice(ci,1); refreshColEditors();
         });
@@ -817,13 +811,13 @@
     var btns = document.createElement('div'); btns.className='editor-btns';
 
     var addCol = document.createElement('button'); addCol.className='editor-btn add-col'; addCol.textContent='+ Column';
-    addCol.addEventListener('click',function(){ row.levels.push(row.levels[row.levels.length-1]||4); refreshColEditors(); });
+    addCol.addEventListener('click',function(e){ e.stopPropagation(); row.levels.push(row.levels[row.levels.length-1]||4); refreshColEditors(); });
 
     var apply = document.createElement('button'); apply.className='editor-btn apply'; apply.textContent='✓ Apply';
-    apply.addEventListener('click',function(){ selectedRow=null; rebuild(); });
+    apply.addEventListener('click',function(e){ e.stopPropagation(); selectedRow=null; rebuild(); });
 
     var cancel = document.createElement('button'); cancel.className='editor-btn cancel'; cancel.textContent='Cancel';
-    cancel.addEventListener('click',function(){ selectedRow=null; renderRowList(); });
+    cancel.addEventListener('click',function(e){ e.stopPropagation(); selectedRow=null; renderRowList(); });
 
     btns.appendChild(addCol); btns.appendChild(apply); btns.appendChild(cancel);
     editor.appendChild(btns);
