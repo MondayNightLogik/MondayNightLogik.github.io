@@ -174,14 +174,14 @@
     <div id="tt-hint">Click to toggle</div>
   </div>
 
-  <div id="drag-banner">&#x2715; MOVE MODE — Click &amp; drag any row left/right &nbsp;|&nbsp; Snaps to 1 m grid &nbsp;|&nbsp; Orbit still works when not dragging</div>
+  <div id="drag-banner">&#x2715; MOVE MODE &mdash; Click &amp; drag any row left/right &nbsp;|&nbsp; Snaps to 1 m grid &nbsp;|&nbsp; Orbit still works when not dragging</div>
 
   <div id="sidebar">
     <button class="btn" id="vTop">Top View</button>
     <button class="btn" id="vIso">Isometric</button>
     <button class="btn" id="vSide">Side View</button>
-    <button class="btn" id="bReset">Reset — All Empty</button>
-    <button class="btn" id="bFill">Set — All Full</button>
+    <button class="btn" id="bReset">Reset &mdash; All Empty</button>
+    <button class="btn" id="bFill">Set &mdash; All Full</button>
   </div>
 
   <div id="legend">
@@ -219,7 +219,6 @@
 (function () {
   'use strict';
 
-  // ── Renderer ────────────────────────────────────────────────────────────
   var app = document.getElementById('app');
   var renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -238,13 +237,11 @@
   controls.maxDistance   = 500;
   controls.maxPolarAngle = Math.PI / 2.05;
 
-  // ── Lighting ────────────────────────────────────────────────────────────
   scene.add(new THREE.AmbientLight(0x7080a0, 0.9));
   var sun = new THREE.DirectionalLight(0xffffff, 1.1);
   sun.position.set(50, 150, 30);
   scene.add(sun);
 
-  // ── Materials & colours ─────────────────────────────────────────────────
   var C_EMPTY = 0x22c55e, C_FULL = 0xef4444, C_HOVER = 0xfacc15, C_SEL = 0x60a5fa;
   var mFloor   = new THREE.MeshLambertMaterial({ color: 0x1a2030 });
   var mWall    = new THREE.MeshLambertMaterial({ color: 0x1a2235, transparent: true, opacity: 0.15 });
@@ -259,24 +256,17 @@
     return geoCache[k];
   }
 
-  // ── Warehouse constants ─────────────────────────────────────────────────
-  // RACK_D  = depth of one rack (pallet depth, X direction, ~48")
-  // SPOT_W  = width of one pallet bay (Z direction, ~43")
-  // COL_Z   = bay pitch along row face = SPOT_W (1 pallet per bay)
-  // PAIR_W  = thickness of back-to-back pair = 2 rack depths + gap
-  // PAIR_P  = pair centre-to-centre pitch = PAIR_W + aisle
-  var RACK_D   = 1.2;          // rack depth (X)
-  var SPOT_W   = 1.1;          // pallet width (Z)
-  var COL_Z    = SPOT_W;       // 1 bay = 1 pallet wide
-  var LVL_H    = 2.0;          // level height
-  var BACK_GAP = 0.22;         // gap between backs of pair
-  var AISLE    = 4.5;          // aisle on each outer face
-  var PAIR_W   = 2*RACK_D + BACK_GAP;   // pair thickness = 2.62 m
-  var PAIR_P   = PAIR_W + AISLE;        // pair pitch = 7.12 m
+  var RACK_D   = 1.2;
+  var SPOT_W   = 1.1;
+  var COL_Z    = SPOT_W;
+  var LVL_H    = 2.0;
+  var BACK_GAP = 0.22;
+  var AISLE    = 4.5;
+  var PAIR_W   = 2*RACK_D + BACK_GAP;
+  var PAIR_P   = PAIR_W + AISLE;
   var SPOT_H   = 1.5, UT = 0.10;
   var GRID_SNAP = 1.0;
 
-  // ── Layout data ─────────────────────────────────────────────────────────
   function makeColumns(pattern, n){
     var cols=[];
     for(var i=0;i<n;i++) cols.push(pattern[i % pattern.length]);
@@ -295,7 +285,6 @@
     for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice(), x: null });
   });
 
-  // Compute initial X positions: backs nearly touching, aisles on outer faces
   function initPositions(){
     var nPairs = Math.ceil(layoutData.length / 2);
     var wW     = (nPairs-1)*PAIR_P + PAIR_W;
@@ -310,13 +299,11 @@
   }
   initPositions();
 
-  // ── Scene groups ────────────────────────────────────────────────────────
   var staticGroup = new THREE.Group();
   var rackGroup   = new THREE.Group();
   scene.add(staticGroup);
   scene.add(rackGroup);
 
-  // ── Compute scene bounds ─────────────────────────────────────────────────
   function computeBounds(){
     var minX = Infinity, maxX = -Infinity, maxC = 0;
     layoutData.forEach(function(row){
@@ -330,7 +317,6 @@
     return { minX:minX, maxX:maxX, cx:(minX+maxX)/2, wW:wW, wD:wD, maxC:maxC, z0:-wD/2 };
   }
 
-  // ── Build floor + grid + walls ──────────────────────────────────────────
   function buildStatic(b){
     while(staticGroup.children.length) staticGroup.remove(staticGroup.children[0]);
     var pad = 12;
@@ -358,7 +344,6 @@
     wall(0.3, WH, fD, b.maxX+pad, WH/2, cz);
   }
 
-  // ── Build racks ─────────────────────────────────────────────────────────
   var skids     = [];
   var rowGroups = [];
 
@@ -386,30 +371,26 @@
         return m;
       }
 
-      // Uprights at ±RACK_D/2 in X, at each column boundary in Z
       for(var ci=0; ci<=cols.length; ci++){
         var uz = z0 + ci*COL_Z;
-        var lH = ci>0            ? cols[ci-1]*LVL_H : 0;
-        var rH = ci<cols.length  ? cols[ci]*LVL_H   : 0;
+        var lH = ci>0           ? cols[ci-1]*LVL_H : 0;
+        var rH = ci<cols.length ? cols[ci]*LVL_H   : 0;
         var upH = Math.max(lH,rH);
         if(!upH) continue;
         rm(UT, upH, UT, mUpright, -RACK_D/2, upH/2, uz);
         rm(UT, upH, UT, mUpright,  RACK_D/2, upH/2, uz);
       }
 
-      // Beams + single spot per bay
       cols.forEach(function(levels, ci){
         var cz   = z0 + ci*COL_Z;
         var midZ = cz + COL_Z/2;
 
-        // Beams span RACK_D in X at each level
         for(var lv=1; lv<=levels; lv++){
           var by = lv*LVL_H - 0.08;
           rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz);
           rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz+COL_Z);
         }
 
-        // One spot per bay per level, centred in the bay
         for(var lv=0; lv<levels; lv++){
           var sy    = lv*LVL_H + 0.09 + SPOT_H/2;
           var py    = lv*LVL_H + 0.045;
@@ -428,7 +409,6 @@
         }
       });
 
-      // Row number label
       makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_Z + 2.0);
     });
   }
@@ -455,7 +435,6 @@
     parent.add(spr);
   }
 
-  // ── Full rebuild ────────────────────────────────────────────────────────
   var bounds;
   function rebuild(){
     bounds = computeBounds();
@@ -466,13 +445,11 @@
   }
   rebuild();
 
-  // Initial camera: side view along X axis so all rack rows appear as parallel lanes
   var midZ = bounds.z0 + bounds.wD/2;
   controls.target.set(bounds.cx, 5, midZ);
   camera.position.set(bounds.minX - 80, 60, midZ);
   controls.update();
 
-  // ── Counters ────────────────────────────────────────────────────────────
   function updateCounters(){
     var full = skids.filter(function(s){ return s.userData.isFull; }).length;
     document.getElementById('ce').textContent = skids.length - full;
@@ -480,7 +457,6 @@
     document.getElementById('ct').textContent = skids.length;
   }
 
-  // ── Row highlight helpers ─────────────────────────────────────────────────
   var hlRow = null;
   var hlSaved = [];
 
@@ -509,7 +485,6 @@
     return null;
   }
 
-  // ── Raycasting ──────────────────────────────────────────────────────────
   var raycaster = new THREE.Raycaster();
   var mouse     = new THREE.Vector2();
   var hovered   = null;
@@ -517,7 +492,6 @@
 
   function spotCol(s){ return s.userData.isFull ? C_FULL : C_EMPTY; }
 
-  // ── Drag state ──────────────────────────────────────────────────────────
   var editMode = false;
   var drag = null;
   var floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
@@ -612,7 +586,6 @@
     updateCounters();
   });
 
-  // ── View presets ────────────────────────────────────────────────────────
   function cam(x,y,z){
     camera.position.set(x,y,z);
     controls.target.set(bounds.cx, 5, bounds.z0+bounds.wD/2);
@@ -630,7 +603,6 @@
     updateCounters();
   };
 
-  // ── Edit Panel ──────────────────────────────────────────────────────────
   var editPanel  = document.getElementById('edit-panel');
   var editToggle = document.getElementById('edit-toggle');
   var legend     = document.getElementById('legend');
@@ -656,11 +628,7 @@
   }
 
   editToggle.addEventListener('click', function(){
-    if(editPanel.classList.contains('open')){
-      closePanel();
-    } else {
-      openPanel();
-    }
+    if(editPanel.classList.contains('open')){ closePanel(); } else { openPanel(); }
   });
   document.getElementById('edit-close').addEventListener('click', closePanel);
 
@@ -730,7 +698,13 @@
 
       var editBtn = document.createElement('button');
       editBtn.className = 'edit-btn'; editBtn.textContent = 'Edit';
-      editBtn.addEventListener('click', function(e){ e.stopPropagation(); selectRow(ri); });
+      editBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        selectedRow = ri;
+        renderRowList();
+        var items = document.querySelectorAll('.row-item');
+        if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
+      });
 
       var dupBtn = document.createElement('button');
       dupBtn.className = 'dup-btn'; dupBtn.textContent = 'Dup';
@@ -738,7 +712,7 @@
         e.stopPropagation();
         var newRow = { levels: row.levels.slice(), x: row.x + PAIR_P };
         layoutData.splice(ri+1, 0, newRow);
-        selectedRow = null;
+        selectedRow = ri;
         rebuild();
       });
 
@@ -748,8 +722,8 @@
         e.stopPropagation();
         if(layoutData.length<=1) return;
         layoutData.splice(ri,1);
-        if(selectedRow===ri) selectedRow=null;
-        else if(selectedRow>ri) selectedRow--;
+        if(selectedRow===ri) selectedRow = ri > 0 ? ri-1 : null;
+        else if(selectedRow > ri) selectedRow--;
         rebuild();
       });
 
@@ -772,16 +746,14 @@
       item.appendChild(header);
       item.appendChild(pills);
       if(selectedRow===ri) item.appendChild(buildRowEditor(ri));
-      item.addEventListener('click', function(){ selectRow(ri); });
+      item.addEventListener('click', function(){
+        selectedRow = (selectedRow===ri) ? null : ri;
+        renderRowList();
+        var items = document.querySelectorAll('.row-item');
+        if(selectedRow===ri && items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
+      });
       list.appendChild(item);
     });
-  }
-
-  function selectRow(ri){
-    selectedRow = (selectedRow===ri) ? null : ri;
-    renderRowList();
-    var items = document.querySelectorAll('.row-item');
-    if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
   }
 
   function buildRowEditor(ri){
@@ -847,14 +819,12 @@
 
   renderRowList();
 
-  // ── Resize ──────────────────────────────────────────────────────────────
   window.addEventListener('resize',function(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // ── Render loop ─────────────────────────────────────────────────────────
   (function animate(){
     requestAnimationFrame(animate);
     controls.update();
