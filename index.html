@@ -55,7 +55,6 @@
     .li { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; font-size: 0.74rem; color: #aaa; }
     .sw { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
 
-    /* drag-mode banner */
     #drag-banner {
       display: none;
       position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
@@ -80,7 +79,6 @@
     #st .n { color: #93c5fd; } #st .l { color: #1e40af; }
     .dv { width: 1px; height: 34px; background: rgba(255,255,255,0.08); }
 
-    /* Edit Panel */
     #edit-panel {
       position: absolute; top: 0; right: -320px; bottom: 0;
       width: 320px; background: rgba(8,8,22,0.97);
@@ -176,7 +174,7 @@
     <div id="tt-hint">Click to toggle</div>
   </div>
 
-  <div id="drag-banner">✥ MOVE MODE — Click &amp; drag any row left/right &nbsp;|&nbsp; Snaps to 1 m grid &nbsp;|&nbsp; Orbit still works when not dragging</div>
+  <div id="drag-banner">&#x2715; MOVE MODE — Click &amp; drag any row left/right &nbsp;|&nbsp; Snaps to 1 m grid &nbsp;|&nbsp; Orbit still works when not dragging</div>
 
   <div id="sidebar">
     <button class="btn" id="vTop">Top View</button>
@@ -195,12 +193,12 @@
     <div class="li"><div class="sw" style="background:#4a5568"></div>Rack</div>
   </div>
 
-  <button id="edit-toggle">✏ Edit Layout</button>
+  <button id="edit-toggle">&#x270F; Edit Layout</button>
 
   <div id="edit-panel">
     <div id="edit-header">
       <h2>Edit Layout</h2>
-      <button id="edit-close">✕</button>
+      <button id="edit-close">&#x2715;</button>
     </div>
     <button id="edit-add-row">+ Add Row</button>
     <div id="row-list"></div>
@@ -262,23 +260,33 @@
   }
 
   // ── Warehouse constants ─────────────────────────────────────────────────
-  var SPOT_W = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
-  var LVL_H  = 2.0;
-  var BACK_GAP = 0.22;
-  var PAIR_W = BAY_W*2 + BACK_GAP;   // width of a back-to-back pair
-  var AISLE  = 4.5;
-  var PAIR_P = PAIR_W + AISLE;        // default pair pitch
-  var SPOT_H = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
-  var GRID_SNAP = 1.0;   // snap rows to 1 m grid when dragging
+  // RACK_D  = depth of one rack (pallet depth, X direction, ~48")
+  // SPOT_W  = width of one pallet bay (Z direction, ~43")
+  // COL_Z   = bay pitch along row face = SPOT_W (1 pallet per bay)
+  // PAIR_W  = thickness of back-to-back pair = 2 rack depths + gap
+  // PAIR_P  = pair centre-to-centre pitch = PAIR_W + aisle
+  var RACK_D   = 1.2;          // rack depth (X)
+  var SPOT_W   = 1.1;          // pallet width (Z)
+  var COL_Z    = SPOT_W;       // 1 bay = 1 pallet wide
+  var LVL_H    = 2.0;          // level height
+  var BACK_GAP = 0.22;         // gap between backs of pair
+  var AISLE    = 4.5;          // aisle on each outer face
+  var PAIR_W   = 2*RACK_D + BACK_GAP;   // pair thickness = 2.62 m
+  var PAIR_P   = PAIR_W + AISLE;        // pair pitch = 7.12 m
+  var SPOT_H   = 1.5, UT = 0.10;
+  var GRID_SNAP = 1.0;
 
   // ── Layout data ─────────────────────────────────────────────────────────
-  // Each row: { levels:[n,n,...], x:float }
-  // x = absolute world X of the row centre (user-controllable)
+  function makeColumns(pattern, n){
+    var cols=[];
+    for(var i=0;i<n;i++) cols.push(pattern[i % pattern.length]);
+    return cols;
+  }
   var DEFAULT_TYPES = {
-    A: [4,5,5,6],
-    B: [4,5,5,6,6,5],
-    C: [4,5,5,6,6],
-    D: [4,5,5,6,6,5]
+    A: makeColumns([4,5,5,6],     19),
+    B: makeColumns([4,5,5,6,6,5], 19),
+    C: makeColumns([4,5,5,6,6],   19),
+    D: makeColumns([4,5,5,6,6,5], 19)
   };
   var ROW_GROUPS = [[4,'A'],[8,'B'],[8,'C'],[14,'D']];
 
@@ -287,18 +295,17 @@
     for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice(), x: null });
   });
 
-  // Compute initial X positions using back-to-back pair formula
+  // Compute initial X positions: backs nearly touching, aisles on outer faces
   function initPositions(){
-    var nRows  = layoutData.length;
-    var nPairs = Math.ceil(nRows / 2);
+    var nPairs = Math.ceil(layoutData.length / 2);
     var wW     = (nPairs-1)*PAIR_P + PAIR_W;
-    var fpX    = -wW/2 + PAIR_W/2;  // centre of pair 0
+    var fpX    = -wW/2 + PAIR_W/2;
     layoutData.forEach(function(row, ri){
       if(row.x !== null) return;
       var pi   = Math.floor(ri/2);
       var side = ri % 2;
       var pc   = fpX + pi * PAIR_P;
-      row.x = pc + (side===0 ? -(BACK_GAP/2+BAY_W/2) : (BACK_GAP/2+BAY_W/2));
+      row.x = pc + (side===0 ? -(BACK_GAP/2+RACK_D/2) : (BACK_GAP/2+RACK_D/2));
     });
   }
   initPositions();
@@ -309,17 +316,17 @@
   scene.add(staticGroup);
   scene.add(rackGroup);
 
-  // ── Compute scene bounds from current row x positions ───────────────────
+  // ── Compute scene bounds ─────────────────────────────────────────────────
   function computeBounds(){
     var minX = Infinity, maxX = -Infinity, maxC = 0;
     layoutData.forEach(function(row){
-      minX = Math.min(minX, row.x - BAY_W);
-      maxX = Math.max(maxX, row.x + BAY_W);
+      minX = Math.min(minX, row.x - RACK_D/2);
+      maxX = Math.max(maxX, row.x + RACK_D/2);
       maxC = Math.max(maxC, row.levels.length);
     });
     if(!isFinite(minX)){ minX=-20; maxX=20; }
     var wW = maxX - minX;
-    var wD = maxC * COL_D;
+    var wD = maxC * COL_Z;
     return { minX:minX, maxX:maxX, cx:(minX+maxX)/2, wW:wW, wD:wD, maxC:maxC, z0:-wD/2 };
   }
 
@@ -330,23 +337,19 @@
     var fW = b.wW + pad*2, fD = b.wD + pad*2;
     var cx = b.cx, cz = b.z0 + b.wD/2;
 
-    // Floor slab
     var fl = new THREE.Mesh(geo(fW, 0.2, fD), mFloor);
     fl.position.set(cx, -0.1, cz);
     staticGroup.add(fl);
 
-    // Fine grid — every 1 m (light teal lines)
     var gs = Math.ceil(Math.max(fW, fD)) + 20;
     var g1 = new THREE.GridHelper(gs, gs, 0x1e3a4a, 0x1e3a4a);
     g1.position.set(cx, 0.01, cz);
     staticGroup.add(g1);
 
-    // Coarse grid — every 5 m (brighter)
     var g5 = new THREE.GridHelper(gs, Math.ceil(gs/5), 0x2a5a7a, 0x2a5a7a);
     g5.position.set(cx, 0.02, cz);
     staticGroup.add(g5);
 
-    // Walls
     var WH = b.maxC * LVL_H + 4;
     function wall(w,h,d,x,y,z){ var m=new THREE.Mesh(geo(w,h,d),mWall); m.position.set(x,y,z); staticGroup.add(m); }
     wall(fW, WH, 0.3, cx, WH/2, b.z0-2);
@@ -357,7 +360,7 @@
 
   // ── Build racks ─────────────────────────────────────────────────────────
   var skids     = [];
-  var rowGroups = [];   // one THREE.Group per row
+  var rowGroups = [];
 
   function buildRacks(b){
     while(rackGroup.children.length) rackGroup.remove(rackGroup.children[0]);
@@ -367,7 +370,6 @@
     var z0 = b.z0;
 
     layoutData.forEach(function(row, ri){
-      // Each row lives in its own Group; position.x = row.x
       var rg = new THREE.Group();
       rg.userData.rowIndex = ri;
       rg.position.x = row.x;
@@ -384,48 +386,50 @@
         return m;
       }
 
-      // Uprights (X coords relative to row centre = 0)
+      // Uprights at ±RACK_D/2 in X, at each column boundary in Z
       for(var ci=0; ci<=cols.length; ci++){
-        var uz = z0 + ci*COL_D;
+        var uz = z0 + ci*COL_Z;
         var lH = ci>0            ? cols[ci-1]*LVL_H : 0;
         var rH = ci<cols.length  ? cols[ci]*LVL_H   : 0;
         var upH = Math.max(lH,rH);
         if(!upH) continue;
-        rm(UT, upH, UT, mUpright, -SPOT_W/2, upH/2, uz);
-        rm(UT, upH, UT, mUpright,  SPOT_W/2, upH/2, uz);
+        rm(UT, upH, UT, mUpright, -RACK_D/2, upH/2, uz);
+        rm(UT, upH, UT, mUpright,  RACK_D/2, upH/2, uz);
       }
 
-      // Beams + skid spots
+      // Beams + single spot per bay
       cols.forEach(function(levels, ci){
-        var cz   = z0 + ci*COL_D;
-        var midZ = cz + COL_D/2;
+        var cz   = z0 + ci*COL_Z;
+        var midZ = cz + COL_Z/2;
 
+        // Beams span RACK_D in X at each level
         for(var lv=1; lv<=levels; lv++){
           var by = lv*LVL_H - 0.08;
-          rm(BAY_W, 0.09, 0.09, mBeam, 0, by, cz);
-          rm(BAY_W, 0.09, 0.09, mBeam, 0, by, cz+COL_D);
+          rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz);
+          rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz+COL_Z);
         }
+
+        // One spot per bay per level, centred in the bay
         for(var lv=0; lv<levels; lv++){
-          var sy = lv*LVL_H + 0.09 + SPOT_H/2;
-          var py = lv*LVL_H + 0.045;
-          ['A','B'].forEach(function(side){
-            var sx = side==='A' ? -SPOT_W/2 : SPOT_W/2;
-            var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
-            var pm = new THREE.Mesh(geo(SPOT_W-0.08, 0.09, SPOT_D), mPallet);
-            pm.position.set(sx, py, midZ);
-            rg.add(pm);
-            var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
-            var sp  = new THREE.Mesh(geo(SPOT_W-0.12, SPOT_H, SPOT_D), mat);
-            sp.position.set(sx, sy, midZ);
-            sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1, side:side };
-            rg.add(sp);
-            skids.push(sp);
-          });
+          var sy    = lv*LVL_H + 0.09 + SPOT_H/2;
+          var py    = lv*LVL_H + 0.045;
+          var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1);
+
+          var pm = new THREE.Mesh(geo(RACK_D-0.08, 0.09, COL_Z-0.08), mPallet);
+          pm.position.set(0, py, midZ);
+          rg.add(pm);
+
+          var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
+          var sp  = new THREE.Mesh(geo(RACK_D-0.12, SPOT_H, COL_Z-0.12), mat);
+          sp.position.set(0, sy, midZ);
+          sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1 };
+          rg.add(sp);
+          skids.push(sp);
         }
       });
 
-      // Row number label (sprite, always faces camera)
-      makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_D + 2.0);
+      // Row number label
+      makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_Z + 2.0);
     });
   }
 
@@ -462,10 +466,10 @@
   }
   rebuild();
 
-  // Initial camera
+  // Initial camera: side view along X axis so all rack rows appear as parallel lanes
   var midZ = bounds.z0 + bounds.wD/2;
   controls.target.set(bounds.cx, 5, midZ);
-  camera.position.set(bounds.cx, 120, midZ+130);
+  camera.position.set(bounds.minX - 80, 60, midZ);
   controls.update();
 
   // ── Counters ────────────────────────────────────────────────────────────
@@ -476,7 +480,7 @@
     document.getElementById('ct').textContent = skids.length;
   }
 
-  // ── Row highlight helpers ────────────────────────────────────────────────
+  // ── Row highlight helpers ─────────────────────────────────────────────────
   var hlRow = null;
   var hlSaved = [];
 
@@ -485,7 +489,7 @@
     clearHighlight();
     hlRow = rg;
     rg.children.forEach(function(m){
-      if(!m.isMesh || m.userData.locId) return; // skip spots & non-meshes
+      if(!m.isMesh || m.userData.locId) return;
       hlSaved.push({ m:m, c:m.material.color.getHex() });
       m.material = m.material.clone();
       m.material.color.setHex(C_SEL);
@@ -498,7 +502,6 @@
     hlRow = null;
   }
 
-  // Find rowGroup that owns a mesh
   function ownerGroup(mesh){
     for(var i=0; i<rowGroups.length; i++){
       if(rowGroups[i].children.indexOf(mesh) !== -1) return rowGroups[i];
@@ -516,11 +519,10 @@
 
   // ── Drag state ──────────────────────────────────────────────────────────
   var editMode = false;
-  var drag = null;  // { rg, rowIndex, offsetX }
+  var drag = null;
   var floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
   var floorPt    = new THREE.Vector3();
 
-  // All rack meshes (for edit-mode hover)
   function allRackMeshes(){
     var out = [];
     rowGroups.forEach(function(rg){ rg.children.forEach(function(m){ if(m.isMesh) out.push(m); }); });
@@ -535,13 +537,12 @@
     if(editMode){
       tooltip.style.display = 'none';
       if(drag){
-        // Move the dragged row
         raycaster.ray.intersectPlane(floorPlane, floorPt);
         var newX = Math.round((floorPt.x - drag.offsetX) / GRID_SNAP) * GRID_SNAP;
         drag.rg.position.x = newX;
         layoutData[drag.rowIndex].x = newX;
         renderer.domElement.style.cursor = 'grabbing';
-        renderRowList();   // update X readout live
+        renderRowList();
       } else {
         var hits = raycaster.intersectObjects(allRackMeshes());
         if(hits.length){
@@ -556,7 +557,6 @@
       return;
     }
 
-    // Normal mode — spot hover
     if(hovered){ hovered.material.color.setHex(spotCol(hovered)); hovered=null; }
     var hits = raycaster.intersectObjects(skids);
     if(hits.length){
@@ -620,7 +620,7 @@
   }
   document.getElementById('vTop').onclick  = function(){ cam(bounds.cx, 250, bounds.z0+bounds.wD/2+0.01); };
   document.getElementById('vIso').onclick  = function(){ cam(bounds.cx-40, 100, bounds.z0+bounds.wD/2+130); };
-  document.getElementById('vSide').onclick = function(){ cam(bounds.minX-30, 25, bounds.z0+bounds.wD/2); };
+  document.getElementById('vSide').onclick = function(){ cam(bounds.minX-80, 60, bounds.z0+bounds.wD/2); };
   document.getElementById('bReset').onclick= function(){
     skids.forEach(function(s){ s.userData.isFull=false; s.material.color.setHex(C_EMPTY); });
     updateCounters();
@@ -652,7 +652,7 @@
     controls.enabled = true;
     clearHighlight();
     dragBanner.classList.remove('show');
-    hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
+    hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
   }
 
   editToggle.addEventListener('click', function(){
@@ -664,7 +664,6 @@
   });
   document.getElementById('edit-close').addEventListener('click', closePanel);
 
-  // Toggle drag/move mode
   document.getElementById('edit-panel').addEventListener('click', function(e){
     if(e.target.id === 'move-toggle-btn'){
       editMode = !editMode;
@@ -675,18 +674,17 @@
         btn.style.borderColor = '#3b82f6';
         btn.style.color = '#93c5fd';
         dragBanner.classList.add('show');
-        hudHint.textContent = '✥ MOVE MODE: click+drag any row  |  Orbit still works on empty floor';
+        hudHint.textContent = '✕ MOVE MODE: click+drag any row  |  Orbit still works on empty floor';
         renderer.domElement.style.cursor = 'grab';
       } else {
-        btn.textContent = '✥ Move Rows (drag)';
+        btn.textContent = '✕ Move Rows (drag)';
         btn.style.background = '';
         btn.style.borderColor = '';
         btn.style.color = '';
         dragBanner.classList.remove('show');
-        hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
+        hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
         renderer.domElement.style.cursor = 'default';
         clearHighlight();
-        // Rebuild static to refresh bounds/walls/grid after moves
         bounds = computeBounds();
         buildStatic(bounds);
       }
@@ -694,17 +692,16 @@
   });
 
   function rowSpotCount(row){
-    return row.levels.reduce(function(a,n){ return a+n*2; }, 0);
+    return row.levels.reduce(function(a,n){ return a+n; }, 0);
   }
 
   function renderRowList(){
     var list = document.getElementById('row-list');
     list.innerHTML = '';
 
-    // Move-rows toggle button at top of list
     var moveBtn = document.createElement('button');
     moveBtn.id = 'move-toggle-btn';
-    moveBtn.textContent = editMode ? '✓ Done Moving Rows' : '✥ Move Rows (drag)';
+    moveBtn.textContent = editMode ? '✓ Done Moving Rows' : '✕ Move Rows (drag)';
     moveBtn.style.cssText = 'display:block;width:calc(100% - 24px);margin:0 12px 10px;padding:7px 14px;border-radius:6px;font-size:0.75rem;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#aaa;transition:all 0.14s;';
     if(editMode){
       moveBtn.style.background = 'rgba(59,130,246,0.25)';
@@ -784,7 +781,7 @@
     selectedRow = (selectedRow===ri) ? null : ri;
     renderRowList();
     var items = document.querySelectorAll('.row-item');
-    if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'}); // +1 for moveBtn
+    if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
   }
 
   function buildRowEditor(ri){
