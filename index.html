@@ -262,13 +262,18 @@
   }
 
   // ── Warehouse constants ─────────────────────────────────────────────────
-  var SPOT_W = 1.1, BAY_W = SPOT_W*2, COL_D = 1.5;
-  var LVL_H  = 2.0;
+  // Each row is a single-deep rack running N→S (Z axis).
+  // A and B spots sit SIDE BY SIDE in Z (parallel to the aisle face).
+  // The row's depth in X = RACK_D (how deep the rack is from aisle to back).
+  var SPOT_W  = 1.1;           // pallet width in Z (along rack face / aisle direction)
+  var RACK_D  = 1.2;           // rack depth in X (perpendicular to aisle, into the rack)
+  var COL_Z   = SPOT_W * 2;    // bay Z-width = 2 pallets side by side = 2.2 m
+  var LVL_H   = 2.0;
   var BACK_GAP = 0.22;
-  var PAIR_W = BAY_W*2 + BACK_GAP;   // width of a back-to-back pair
-  var AISLE  = 4.5;
-  var PAIR_P = PAIR_W + AISLE;        // default pair pitch
-  var SPOT_H = 1.5, SPOT_D = COL_D*0.78, UT = 0.10;
+  var PAIR_W  = 2*RACK_D + BACK_GAP;  // back-to-back pair total X width = 2.62 m
+  var AISLE   = 4.5;
+  var PAIR_P  = PAIR_W + AISLE;       // pair pitch = 7.12 m
+  var SPOT_H  = 1.5, UT = 0.10;
   var GRID_SNAP = 1.0;   // snap rows to 1 m grid when dragging
 
   // ── Layout data ─────────────────────────────────────────────────────────
@@ -298,7 +303,7 @@
       var pi   = Math.floor(ri/2);
       var side = ri % 2;
       var pc   = fpX + pi * PAIR_P;
-      row.x = pc + (side===0 ? -(BACK_GAP/2+BAY_W/2) : (BACK_GAP/2+BAY_W/2));
+      row.x = pc + (side===0 ? -(BACK_GAP/2+RACK_D/2) : (BACK_GAP/2+RACK_D/2));
     });
   }
   initPositions();
@@ -313,13 +318,13 @@
   function computeBounds(){
     var minX = Infinity, maxX = -Infinity, maxC = 0;
     layoutData.forEach(function(row){
-      minX = Math.min(minX, row.x - BAY_W);
-      maxX = Math.max(maxX, row.x + BAY_W);
+      minX = Math.min(minX, row.x - RACK_D/2);
+      maxX = Math.max(maxX, row.x + RACK_D/2);
       maxC = Math.max(maxC, row.levels.length);
     });
     if(!isFinite(minX)){ minX=-20; maxX=20; }
     var wW = maxX - minX;
-    var wD = maxC * COL_D;
+    var wD = maxC * COL_Z;
     return { minX:minX, maxX:maxX, cx:(minX+maxX)/2, wW:wW, wD:wD, maxC:maxC, z0:-wD/2 };
   }
 
@@ -384,39 +389,46 @@
         return m;
       }
 
-      // Uprights (X coords relative to row centre = 0)
+      // Uprights: 2 posts per bay boundary (front face & back face of rack).
+      // Bay boundaries are at z = z0 + ci*COL_Z.
+      // Posts are at x = ±RACK_D/2 (front/back of rack).
       for(var ci=0; ci<=cols.length; ci++){
-        var uz = z0 + ci*COL_D;
-        var lH = ci>0            ? cols[ci-1]*LVL_H : 0;
-        var rH = ci<cols.length  ? cols[ci]*LVL_H   : 0;
+        var uz  = z0 + ci*COL_Z;
+        var lH  = ci>0           ? cols[ci-1]*LVL_H : 0;
+        var rH  = ci<cols.length ? cols[ci]*LVL_H   : 0;
         var upH = Math.max(lH,rH);
         if(!upH) continue;
-        rm(UT, upH, UT, mUpright, -SPOT_W/2, upH/2, uz);
-        rm(UT, upH, UT, mUpright,  SPOT_W/2, upH/2, uz);
+        rm(UT, upH, UT, mUpright, -RACK_D/2, upH/2, uz);
+        rm(UT, upH, UT, mUpright,  RACK_D/2, upH/2, uz);
       }
 
-      // Beams + skid spots
+      // Beams + skid spots.
+      // Beams run in Z direction (parallel to aisle face) at front & back of rack.
+      // A and B spots sit side-by-side in Z within each bay.
       cols.forEach(function(levels, ci){
-        var cz   = z0 + ci*COL_D;
-        var midZ = cz + COL_D/2;
+        var bayZ0  = z0 + ci*COL_Z;          // Z start of this bay
+        var bayMid = bayZ0 + COL_Z/2;        // Z centre of bay
 
+        // Horizontal beams at each level (run in Z, at front/back X faces)
         for(var lv=1; lv<=levels; lv++){
           var by = lv*LVL_H - 0.08;
-          rm(BAY_W, 0.09, 0.09, mBeam, 0, by, cz);
-          rm(BAY_W, 0.09, 0.09, mBeam, 0, by, cz+COL_D);
+          rm(0.09, 0.09, COL_Z, mBeam, -RACK_D/2, by, bayMid);
+          rm(0.09, 0.09, COL_Z, mBeam,  RACK_D/2, by, bayMid);
         }
+
+        // Skid spots: A = south half of bay, B = north half, both at rack centre X
         for(var lv=0; lv<levels; lv++){
           var sy = lv*LVL_H + 0.09 + SPOT_H/2;
           var py = lv*LVL_H + 0.045;
           ['A','B'].forEach(function(side){
-            var sx = side==='A' ? -SPOT_W/2 : SPOT_W/2;
+            var sz    = bayZ0 + (side==='A' ? SPOT_W/2 : SPOT_W*1.5);
             var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1)+'-'+side;
-            var pm = new THREE.Mesh(geo(SPOT_W-0.08, 0.09, SPOT_D), mPallet);
-            pm.position.set(sx, py, midZ);
+            var pm = new THREE.Mesh(geo(RACK_D-0.08, 0.09, SPOT_W-0.08), mPallet);
+            pm.position.set(0, py, sz);
             rg.add(pm);
             var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
-            var sp  = new THREE.Mesh(geo(SPOT_W-0.12, SPOT_H, SPOT_D), mat);
-            sp.position.set(sx, sy, midZ);
+            var sp  = new THREE.Mesh(geo(RACK_D-0.12, SPOT_H, SPOT_W-0.12), mat);
+            sp.position.set(0, sy, sz);
             sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1, side:side };
             rg.add(sp);
             skids.push(sp);
@@ -424,8 +436,8 @@
         }
       });
 
-      // Row number label (sprite, always faces camera)
-      makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_D + 2.0);
+      // Row number label
+      makeRowLabel(rg, 'R'+rowNum, 0, 2.2, z0 + cols.length*COL_Z + 2.0);
     });
   }
 
