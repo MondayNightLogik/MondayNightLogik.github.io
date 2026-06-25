@@ -48,140 +48,185 @@
       position: absolute; top: 56px; right: 12px; z-index: 5;
       background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.08);
       border-radius: 8px; padding: 10px 14px; pointer-events: none;
-      transition: right 0.3s;
+      transition: right 0.25s;
     }
-    #legend.shifted { right: 332px; }
-    #legend h3 { color: #666; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 7px; }
-    .li { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; font-size: 0.74rem; color: #aaa; }
-    .sw { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+    #legend.shifted { right: 310px; }
+    .leg-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+    .leg-row:last-child { margin-bottom: 0; }
+    .leg-swatch { width: 14px; height: 14px; border-radius: 2px; }
+    .leg-label  { color: #888; font-size: 0.7rem; }
 
-    #drag-banner {
-      display: none;
-      position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
-      background: rgba(59,130,246,0.25); border: 1px solid #3b82f6;
-      color: #93c5fd; font-size: 0.75rem; padding: 6px 16px; border-radius: 6px;
-      z-index: 10; pointer-events: none; white-space: nowrap;
+    #counter {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; padding: 8px 20px; color: #ccc; font-size: 0.78rem;
+      pointer-events: none; white-space: nowrap;
     }
-    #drag-banner.show { display: block; }
+    #counter strong { color: #e2e8ff; }
 
-    #bar {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      display: flex; align-items: center; justify-content: center; gap: 36px;
-      padding: 12px 0;
-      background: rgba(8,8,25,0.92); border-top: 1px solid rgba(255,255,255,0.08);
-      z-index: 10; pointer-events: none;
-    }
-    .stat { text-align: center; }
-    .stat .n { font-size: 1.9rem; font-weight: 800; line-height: 1; }
-    .stat .l { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
-    #se .n { color: #4ade80; } #se .l { color: #166534; }
-    #sf .n { color: #f87171; } #sf .l { color: #991b1b; }
-    #st .n { color: #93c5fd; } #st .l { color: #1e40af; }
-    .dv { width: 1px; height: 34px; background: rgba(255,255,255,0.08); }
-
-    #edit-panel {
-      position: absolute; top: 0; right: -320px; bottom: 0;
-      width: 320px; background: rgba(8,8,22,0.97);
-      border-left: 1px solid rgba(255,255,255,0.1);
-      z-index: 15; display: flex; flex-direction: column;
-      transition: right 0.3s ease;
-    }
-    #edit-panel.open { right: 0; }
-    #edit-header {
-      padding: 14px 16px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
-    #edit-header h2 { color: #e2e8ff; font-size: 0.9rem; font-weight: 600; }
-    #edit-close { background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; padding: 0 4px; }
-    #edit-close:hover { color: #ccc; }
-
-    #edit-add-row {
-      margin: 10px 12px 6px;
-      background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
-      color: #4ade80; padding: 7px 14px; border-radius: 6px;
-      font-size: 0.75rem; cursor: pointer; transition: all 0.14s; flex-shrink: 0;
-    }
-    #edit-add-row:hover { background: rgba(34,197,94,0.25); }
-
-    #edit-tools {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
-      padding: 10px 12px 4px; flex-shrink: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-    .tool-btn {
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
-      color: #bbb; padding: 5px 9px; border-radius: 5px;
-      font-size: 0.68rem; cursor: pointer; transition: all 0.12s;
-    }
-    .tool-btn:hover { background: rgba(59,130,246,0.25); border-color: #3b82f6; color: #fff; }
-    #saveBtn { background: rgba(34,197,94,0.16); border-color: rgba(34,197,94,0.4); color: #4ade80; }
-    #saveBtn:hover { background: rgba(34,197,94,0.32); border-color: #22c55e; color: #fff; }
-    #resetBtn:hover { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #fff; }
-    #tool-status { font-size: 0.66rem; font-weight: 700; margin-left: auto; min-height: 12px; }
-
-    #row-list { flex: 1; overflow-y: auto; padding: 4px 0; }
-    #row-list::-webkit-scrollbar { width: 4px; }
-    #row-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-    .row-item {
-      padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
-      cursor: pointer; transition: background 0.1s;
-    }
-    .row-item:hover { background: rgba(255,255,255,0.03); }
-    .row-item.selected { background: rgba(59,130,246,0.12); border-left: 2px solid #3b82f6; }
-    .row-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-    .row-label { color: #93c5fd; font-size: 0.78rem; font-weight: 600; }
-    .row-meta  { color: #555; font-size: 0.65rem; }
-    .row-actions { display: flex; gap: 4px; }
-    .row-actions button {
-      background: none; border: 1px solid rgba(255,255,255,0.1);
-      color: #666; font-size: 0.65rem; padding: 2px 7px; border-radius: 4px;
-      cursor: pointer; transition: all 0.12s;
-    }
-    .row-actions .edit-btn:hover { border-color: #3b82f6; color: #93c5fd; }
-    .row-actions .del-btn:hover  { border-color: #ef4444; color: #f87171; }
-    .row-actions .dup-btn:hover  { border-color: #a78bfa; color: #c4b5fd; }
-    .col-pills { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
-    .col-pill { background: rgba(255,255,255,0.06); border-radius: 3px; padding: 1px 6px; font-size: 0.65rem; color: #888; }
-
-    .row-editor { background: rgba(15,15,40,0.8); border-top: 1px solid rgba(255,255,255,0.06); padding: 10px 12px; }
-    .editor-title { color: #7dd3fc; font-size: 0.72rem; font-weight: 600; margin-bottom: 8px; }
-    .col-editors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-    .col-editor { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .col-editor label { color: #666; font-size: 0.6rem; }
-    .col-editor input {
-      width: 42px; background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
-      color: #e2e8ff; font-size: 0.8rem; text-align: center; padding: 3px 0;
-    }
-    .col-editor input:focus { outline: none; border-color: #3b82f6; }
-    .col-editor .del-col { background: none; border: none; color: #555; font-size: 0.7rem; cursor: pointer; padding: 0; }
-    .col-editor .del-col:hover { color: #ef4444; }
-    .editor-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-    .editor-btn { font-size: 0.68rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; border: 1px solid; transition: all 0.12s; }
-    .editor-btn.add-col { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
-    .editor-btn.add-col:hover { background: rgba(59,130,246,0.3); }
-    .editor-btn.apply { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: #4ade80; }
-    .editor-btn.apply:hover { background: rgba(34,197,94,0.3); }
-    .editor-btn.cancel { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: #888; }
-    .editor-btn.cancel:hover { background: rgba(255,255,255,0.1); }
-
+    /* ── Edit Layout Panel ──────────────────────────────────── */
     #edit-toggle {
-      position: absolute; top: 56px; right: 12px; z-index: 16;
+      position: absolute; top: 56px; right: 12px; z-index: 15;
       background: rgba(10,10,35,0.9); border: 1px solid rgba(255,255,255,0.12);
       color: #bbb; padding: 6px 14px; border-radius: 6px;
       font-size: 0.72rem; cursor: pointer; transition: all 0.14s;
     }
-    #edit-toggle:hover, #edit-toggle.active { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
+    #edit-toggle:hover { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
+    #edit-toggle.active { background: rgba(59,130,246,0.35); border-color: #3b82f6; color: #fff; }
+
+    #edit-panel {
+      position: absolute; top: 0; right: -300px; width: 290px; height: 100%;
+      background: rgba(8,8,25,0.97); border-left: 1px solid rgba(255,255,255,0.08);
+      display: flex; flex-direction: column; z-index: 14;
+      transition: right 0.25s ease;
+      overflow: hidden;
+    }
+    #edit-panel.open { right: 0; }
+
+    #edit-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    #edit-header h2 { color: #c0caf5; font-size: 0.85rem; font-weight: 600; }
+    #edit-close {
+      background: none; border: none; color: #555; font-size: 1.1rem; cursor: pointer;
+      line-height: 1; padding: 2px 4px;
+    }
+    #edit-close:hover { color: #fff; }
+
+    #edit-tools {
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .tool-btn {
+      background: rgba(30,30,60,0.9); border: 1px solid rgba(255,255,255,0.12);
+      color: #aaa; padding: 4px 10px; border-radius: 5px;
+      font-size: 0.68rem; cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .tool-btn:hover { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
+    #tool-status { color: #4ade80; font-size: 0.65rem; margin-left: 4px; }
+    #tool-status.err { color: #f87171; }
+
+    #edit-add-row {
+      width: calc(100% - 20px); margin: 8px 10px 0;
+      background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+      color: #4ade80; padding: 6px; border-radius: 6px;
+      font-size: 0.72rem; cursor: pointer; transition: all 0.12s;
+      flex-shrink: 0;
+    }
+    #edit-add-row:hover { background: rgba(34,197,94,0.25); }
+
+    #row-list {
+      flex: 1; overflow-y: auto; padding: 8px 10px 10px;
+    }
+    #row-list::-webkit-scrollbar { width: 4px; }
+    #row-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+    .row-item {
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 6px; padding: 7px 9px; margin-bottom: 5px; cursor: pointer;
+    }
+    .row-item:hover { background: rgba(255,255,255,0.03); }
+    .row-item.selected { background: rgba(59,130,246,0.12); border-left: 2px solid #3b82f6; }
+    .row-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .row-label { color: #c0caf5; font-size: 0.75rem; font-weight: 600; }
+    .row-meta  { color: #555; font-size: 0.65rem; }
+
+    .row-actions { display: flex; gap: 5px; }
+    .edit-btn, .del-btn {
+      background: none; border: 1px solid rgba(255,255,255,0.1); color: #666;
+      padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; cursor: pointer;
+    }
+    .edit-btn:hover { border-color: #3b82f6; color: #93c5fd; }
+    .del-btn:hover  { border-color: #f87171; color: #f87171; }
+
+    .row-editor {
+      margin-top: 6px; background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 5px; padding: 8px;
+    }
+    .row-editor label { color: #888; font-size: 0.65rem; display: block; margin-bottom: 4px; }
+    .level-inputs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+    .level-input {
+      width: 36px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      color: #ccc; border-radius: 4px; text-align: center; font-size: 0.75rem; padding: 3px;
+    }
+    .level-input:focus { outline: none; border-color: #3b82f6; }
+    .editor-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+    .editor-btns button {
+      background: rgba(30,30,60,0.9); border: 1px solid rgba(255,255,255,0.1);
+      color: #aaa; padding: 3px 9px; border-radius: 4px; font-size: 0.65rem; cursor: pointer;
+    }
+    .editor-btns button:hover { background: rgba(59,130,246,0.28); border-color: #3b82f6; color: #fff; }
+
+    /* move-mode drag banner */
+    #drag-banner {
+      display: none; position: absolute; top: 48px; left: 0; right: 0;
+      background: rgba(234,179,8,0.18); border-bottom: 1px solid rgba(234,179,8,0.45);
+      color: #fde047; text-align: center; font-size: 0.72rem; padding: 5px 0; z-index: 16;
+    }
+    #drag-banner.show { display: block; }
+
+    #move-toggle-btn {
+      width: calc(100% - 20px); margin: 6px 10px 4px;
+      background: rgba(234,179,8,0.10); border: 1px solid rgba(234,179,8,0.3);
+      color: #fde047; padding: 6px; border-radius: 6px;
+      font-size: 0.72rem; cursor: pointer; transition: all 0.12s;
+      flex-shrink: 0;
+    }
+    #move-toggle-btn:hover { background: rgba(234,179,8,0.2); }
   </style>
 </head>
 <body>
 <div id="app">
   <div id="hud">
-    <h1>WAREHOUSE 3D MAP</h1>
-    <span id="hud-hint">Left-drag: rotate &nbsp;|&nbsp; Scroll: zoom &nbsp;|&nbsp; Right-drag: pan &nbsp;|&nbsp; Click spot: toggle full/empty</span>
+    <h1>MNL WAREHOUSE</h1>
+    <span id="hud-hint">Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty</span>
+  </div>
+  <div id="drag-banner">MOVE MODE — drag a row left/right &nbsp;|&nbsp; scroll to zoom &nbsp;|&nbsp; right-drag to pan</div>
+
+  <div id="sidebar">
+    <button class="btn" id="vTop">⊡ Top</button>
+    <button class="btn" id="vIso">⟳ Iso</button>
+    <button class="btn" id="vSide">↔ Side</button>
+    <hr style="border-color:rgba(255,255,255,0.07);margin:2px 0">
+    <button class="btn" id="bReset">✕ Clear All</button>
+    <button class="btn" id="bFill">■ Fill All</button>
+  </div>
+
+  <button id="edit-toggle">✏ Edit Layout</button>
+
+  <div id="edit-panel">
+    <div id="edit-header">
+      <h2>Edit Layout</h2>
+      <button id="edit-close">✕</button>
+    </div>
+    <div id="edit-tools">
+      <button class="tool-btn" id="saveBtn">💾 Save</button>
+      <button class="tool-btn" id="exportBtn">⬇ Export</button>
+      <button class="tool-btn" id="importBtn">⬆ Import</button>
+      <button class="tool-btn" id="resetBtn" title="Clear saved layout and restore the default">↺ Reset</button>
+      <span id="tool-status"></span>
+      <input type="file" id="importInput" accept="application/json,.json" hidden>
+    </div>
+    <button id="move-toggle-btn">✕ Move Rows (drag)</button>
+    <button id="edit-add-row">+ Add Row</button>
+    <div id="row-list"></div>
+  </div>
+
+  <div id="legend">
+    <div class="leg-row"><div class="leg-swatch" style="background:#4ade80"></div><span class="leg-label">Empty</span></div>
+    <div class="leg-row"><div class="leg-swatch" style="background:#f87171"></div><span class="leg-label">Full</span></div>
+    <div class="leg-row"><div class="leg-swatch" style="background:#60a5fa"></div><span class="leg-label">Hovered</span></div>
+  </div>
+
+  <div id="counter">
+    <strong id="ct">0</strong> total spots &nbsp;|&nbsp;
+    <strong id="cf">0</strong> full &nbsp;|&nbsp;
+    <strong id="ce">0</strong> empty
   </div>
 
   <div id="tooltip">
@@ -189,484 +234,344 @@
     <div id="tt-status"></div>
     <div id="tt-hint">Click to toggle</div>
   </div>
-
-  <div id="drag-banner">&#x2715; MOVE MODE &mdash; Click &amp; drag any row left/right &nbsp;|&nbsp; Snaps to 1 m grid &nbsp;|&nbsp; Orbit still works when not dragging</div>
-
-  <div id="sidebar">
-    <button class="btn" id="vTop">Top View</button>
-    <button class="btn" id="vIso">Isometric</button>
-    <button class="btn" id="vSide">Side View</button>
-    <button class="btn" id="bReset">Reset &mdash; All Empty</button>
-    <button class="btn" id="bFill">Set &mdash; All Full</button>
-  </div>
-
-  <div id="legend">
-    <h3>Legend</h3>
-    <div class="li"><div class="sw" style="background:#22c55e"></div>Empty</div>
-    <div class="li"><div class="sw" style="background:#ef4444"></div>Full</div>
-    <div class="li"><div class="sw" style="background:#facc15"></div>Hovered</div>
-    <div class="li"><div class="sw" style="background:#60a5fa"></div>Selected row</div>
-    <div class="li"><div class="sw" style="background:#4a5568"></div>Rack</div>
-  </div>
-
-  <button id="edit-toggle">&#x270F; Edit Layout</button>
-
-  <div id="edit-panel">
-    <div id="edit-header">
-      <h2>Edit Layout</h2>
-      <button id="edit-close">&#x2715;</button>
-    </div>
-    <div id="edit-tools">
-      <button class="tool-btn" id="saveBtn" title="Save this layout to your browser">&#x1F4BE; Save</button>
-      <button class="tool-btn" id="exportBtn" title="Download layout as a file">&#x2B07; Export</button>
-      <button class="tool-btn" id="importBtn" title="Load a layout file">&#x2B06; Import</button>
-      <button class="tool-btn" id="resetBtn" title="Clear saved layout and restore the default">&#x21BA; Reset</button>
-      <span id="tool-status"></span>
-      <input type="file" id="importInput" accept="application/json,.json" hidden>
-    </div>
-    <button id="edit-add-row">+ Add Row</button>
-    <div id="row-list"></div>
-  </div>
-
-  <div id="bar">
-    <div class="stat" id="se"><div class="n" id="ce">0</div><div class="l">Empty</div></div>
-    <div class="dv"></div>
-    <div class="stat" id="sf"><div class="n" id="cf">0</div><div class="l">Full</div></div>
-    <div class="dv"></div>
-    <div class="stat" id="st"><div class="n" id="ct">0</div><div class="l">Total Spots</div></div>
-  </div>
 </div>
 
 <script src="three.min.js"></script>
 <script src="OrbitControls.js"></script>
 <script>
-(function () {
+(function(){
   'use strict';
 
-  // ── Renderer ─────────────────────────────────────────────────────────────
-  var app = document.getElementById('app');
-  var renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x0d1117, 1);
-  app.appendChild(renderer.domElement);
+  // ── Constants ────────────────────────────────────────────────────────────
+  var RACK_D=1.2, SPOT_W=1.1, COL_Z=SPOT_W, LVL_H=2.0;
+  var BACK_GAP=0.22, AISLE=4.5;
+  var PAIR_W=2*RACK_D+BACK_GAP, PAIR_P=PAIR_W+AISLE;
+  var SPOT_H=1.5, UT=0.10, GRID_SNAP=1.0;
 
-  var scene  = new THREE.Scene();
-  scene.fog  = new THREE.Fog(0x0d1117, 300, 600);
-  var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 800);
+  var C_EMPTY=0x4ade80, C_FULL=0xf87171, C_HOVER=0x60a5fa, C_FLOOR=0x1a1a2e;
+  var C_BEAM=0x334155, C_POST=0x475569, C_UPR=0x1e3a5f;
 
-  var controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.07;
-  controls.minDistance   = 5;
-  controls.maxDistance   = 500;
-  controls.maxPolarAngle = Math.PI / 2.05;
-
-  // ── Lighting ────────────────────────────────────────────────────────────
-  scene.add(new THREE.AmbientLight(0x7080a0, 0.9));
-  var sun = new THREE.DirectionalLight(0xffffff, 1.1);
-  sun.position.set(50, 150, 30);
-  scene.add(sun);
-
-  // ── Materials & colours ─────────────────────────────────────────────────
-  var C_EMPTY = 0x22c55e, C_FULL = 0xef4444, C_HOVER = 0xfacc15, C_SEL = 0x60a5fa;
-  var mFloor   = new THREE.MeshLambertMaterial({ color: 0x1a2030 });
-  var mWall    = new THREE.MeshLambertMaterial({ color: 0x1a2235, transparent: true, opacity: 0.15 });
-  var mUpright = new THREE.MeshLambertMaterial({ color: 0x4a5568 });
-  var mBeam    = new THREE.MeshLambertMaterial({ color: 0x1e3a5f });
-  var mPallet  = new THREE.MeshLambertMaterial({ color: 0x5c3d1a });
-
-  var geoCache = {};
-  function geo(w,h,d){
-    var k=w.toFixed(2)+','+h.toFixed(2)+','+d.toFixed(2);
-    if(!geoCache[k]) geoCache[k]=new THREE.BoxGeometry(w,h,d);
-    return geoCache[k];
-  }
-
-  // ── Warehouse constants ─────────────────────────────────────────────────
-  // RACK_D = rack depth (X, ~48"); SPOT_W = bay width (Z, ~43")
-  // Pair: 2 racks back-to-back with a small gap; aisle on each outer face
-  var RACK_D   = 1.2;
-  var SPOT_W   = 1.1;
-  var COL_Z    = SPOT_W;
-  var LVL_H    = 2.0;
-  var BACK_GAP = 0.22;
-  var AISLE    = 4.5;
-  var PAIR_W   = 2*RACK_D + BACK_GAP;
-  var PAIR_P   = PAIR_W + AISLE;
-  var SPOT_H   = 1.5, UT = 0.10;
-  var GRID_SNAP = 1.0;
-
-  // ── Layout data ─────────────────────────────────────────────────────────
-  function makeColumns(pattern, n){
+  // ── Default layout ───────────────────────────────────────────────────────
+  function makeColumns(pattern, count){
     var cols=[];
-    for(var i=0;i<n;i++) cols.push(pattern[i % pattern.length]);
+    for(var i=0;i<count;i++) cols.push(pattern[i%pattern.length]);
     return cols;
   }
   var DEFAULT_TYPES = {
-    A: makeColumns([4,5,5,6],     19),
+    A: makeColumns([4,5,5,6], 19),
     B: makeColumns([4,5,5,6,6,5], 19),
-    C: makeColumns([4,5,5,6,6],   19),
+    C: makeColumns([4,5,5,6,6], 19),
     D: makeColumns([4,5,5,6,6,5], 19)
   };
   var ROW_GROUPS = [[4,'A'],[8,'B'],[8,'C'],[14,'D']];
 
-  var layoutData = [];
-  ROW_GROUPS.forEach(function(g){
-    for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice(), x: null });
-  });
-
-  function initPositions(){
-    var nPairs = Math.ceil(layoutData.length / 2);
-    var wW     = (nPairs-1)*PAIR_P + PAIR_W;
-    var fpX    = -wW/2 + PAIR_W/2;
-    layoutData.forEach(function(row, ri){
-      if(row.x !== null) return;
-      var pi   = Math.floor(ri/2);
-      var side = ri % 2;
-      var pc   = fpX + pi * PAIR_P;
-      row.x = pc + (side===0 ? -(BACK_GAP/2+RACK_D/2) : (BACK_GAP/2+RACK_D/2));
-    });
-  }
-  initPositions();
-
-  // ── Scene groups ────────────────────────────────────────────────────────
-  var staticGroup = new THREE.Group();
-  var rackGroup   = new THREE.Group();
-  scene.add(staticGroup);
-  scene.add(rackGroup);
-
-  // ── Compute scene bounds ─────────────────────────────────────────────────
-  function computeBounds(){
-    var minX = Infinity, maxX = -Infinity, maxC = 0;
-    layoutData.forEach(function(row){
-      minX = Math.min(minX, row.x - RACK_D/2);
-      maxX = Math.max(maxX, row.x + RACK_D/2);
-      maxC = Math.max(maxC, row.levels.length);
-    });
-    if(!isFinite(minX)){ minX=-20; maxX=20; }
-    var wW = maxX - minX;
-    var wD = maxC * COL_Z;
-    return { minX:minX, maxX:maxX, cx:(minX+maxX)/2, wW:wW, wD:wD, maxC:maxC, z0:-wD/2 };
+  function buildDefaultLayout(){
+    var rows=[];
+    ROW_GROUPS.forEach(function(g){ for(var i=0;i<g[0];i++) rows.push({levels:DEFAULT_TYPES[g[1]].slice(),x:null}); });
+    return rows;
   }
 
-  // ── Build floor + grid + walls ──────────────────────────────────────────
-  function buildStatic(b){
-    while(staticGroup.children.length) staticGroup.remove(staticGroup.children[0]);
-    var pad = 12;
-    var fW = b.wW + pad*2, fD = b.wD + pad*2;
-    var cx = b.cx, cz = b.z0 + b.wD/2;
+  // ── State ────────────────────────────────────────────────────────────────
+  var layoutData = buildDefaultLayout();
 
-    var fl = new THREE.Mesh(geo(fW, 0.2, fD), mFloor);
-    fl.position.set(cx, -0.1, cz);
-    staticGroup.add(fl);
-
-    var gs = Math.ceil(Math.max(fW, fD)) + 20;
-    var g1 = new THREE.GridHelper(gs, gs, 0x1e3a4a, 0x1e3a4a);
-    g1.position.set(cx, 0.01, cz);
-    staticGroup.add(g1);
-
-    var g5 = new THREE.GridHelper(gs, Math.ceil(gs/5), 0x2a5a7a, 0x2a5a7a);
-    g5.position.set(cx, 0.02, cz);
-    staticGroup.add(g5);
-
-    var WH = b.maxC * LVL_H + 4;
-    function wall(w,h,d,x,y,z){ var m=new THREE.Mesh(geo(w,h,d),mWall); m.position.set(x,y,z); staticGroup.add(m); }
-    wall(fW, WH, 0.3, cx, WH/2, b.z0-2);
-    wall(fW, WH, 0.3, cx, WH/2, b.z0+b.wD+2);
-    wall(0.3, WH, fD, b.minX-pad, WH/2, cz);
-    wall(0.3, WH, fD, b.maxX+pad, WH/2, cz);
-  }
-
-  // ── Build racks ─────────────────────────────────────────────────────────
-  var skids     = [];
-  var rowGroups = [];
-
-  function buildRacks(b){
-    while(rackGroup.children.length) rackGroup.remove(rackGroup.children[0]);
-    skids     = [];
-    rowGroups = [];
-
-    var z0 = b.z0;
-
-    // Assign row numbers left-to-right by X position (1 = leftmost)
-    var sortedIdx = layoutData.map(function(_,i){ return i; });
-    sortedIdx.sort(function(a,b){ return layoutData[a].x - layoutData[b].x; });
-    var rowNumByIndex = [];
-    sortedIdx.forEach(function(dataIdx, pos){ rowNumByIndex[dataIdx] = pos + 1; });
-
-    layoutData.forEach(function(row, ri){
-      var rg = new THREE.Group();
-      rg.userData.rowIndex = ri;
-      rg.position.x = row.x;
-      rackGroup.add(rg);
-      rowGroups.push(rg);
-
-      var cols   = row.levels;
-      var rowNum = rowNumByIndex[ri];
-
-      function rm(w,h,d,mat,x,y,z){
-        var m = new THREE.Mesh(geo(w,h,d), mat);
-        m.position.set(x,y,z);
-        rg.add(m);
-        return m;
-      }
-
-      for(var ci=0; ci<=cols.length; ci++){
-        var uz = z0 + ci*COL_Z;
-        var lH = ci>0           ? cols[ci-1]*LVL_H : 0;
-        var rH = ci<cols.length ? cols[ci]*LVL_H   : 0;
-        var upH = Math.max(lH,rH);
-        if(!upH) continue;
-        rm(UT, upH, UT, mUpright, -RACK_D/2, upH/2, uz);
-        rm(UT, upH, UT, mUpright,  RACK_D/2, upH/2, uz);
-      }
-
-      cols.forEach(function(levels, ci){
-        var cz   = z0 + ci*COL_Z;
-        var midZ = cz + COL_Z/2;
-
-        for(var lv=1; lv<=levels; lv++){
-          var by = lv*LVL_H - 0.08;
-          rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz);
-          rm(RACK_D, 0.09, 0.09, mBeam, 0, by, cz+COL_Z);
-        }
-
-        for(var lv=0; lv<levels; lv++){
-          var sy    = lv*LVL_H + 0.09 + SPOT_H/2;
-          var py    = lv*LVL_H + 0.045;
-          var locId = 'R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1);
-
-          var pm = new THREE.Mesh(geo(RACK_D-0.08, 0.09, COL_Z-0.08), mPallet);
-          pm.position.set(0, py, midZ);
-          rg.add(pm);
-
-          var mat = new THREE.MeshLambertMaterial({ color: C_EMPTY });
-          var sp  = new THREE.Mesh(geo(RACK_D-0.12, SPOT_H, COL_Z-0.12), mat);
-          sp.position.set(0, sy, midZ);
-          sp.userData = { locId:locId, isFull:false, row:rowNum, col:ci+1, level:lv+1 };
-          rg.add(sp);
-          skids.push(sp);
-        }
-      });
-
-      // Offset label toward outer face so paired-row labels don't overlap
-      var labelX = (ri % 2 === 0) ? -(RACK_D/2 + 0.4) : (RACK_D/2 + 0.4);
-      makeRowLabel(rg, 'R'+rowNum, labelX, 2.2, z0 + cols.length*COL_Z + 2.0);
-    });
-  }
-
-  function makeRowLabel(parent, text, x, y, z){
-    var cv = document.createElement('canvas');
-    cv.width=128; cv.height=64;
-    var ctx = cv.getContext('2d');
-    ctx.clearRect(0,0,128,64);
-    ctx.fillStyle='#facc15';
-    ctx.beginPath();
-    if(ctx.roundRect) ctx.roundRect(4,4,120,56,10);
-    else ctx.rect(4,4,120,56);
-    ctx.fill();
-    ctx.fillStyle='#111';
-    ctx.font='bold 30px Arial';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.fillText(text,64,34);
-    var tex = new THREE.CanvasTexture(cv);
-    var spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false}));
-    spr.scale.set(2.4, 1.2, 1);
-    spr.position.set(x,y,z);
-    parent.add(spr);
-  }
-
-  // ── Persistence (localStorage + file import/export) ─────────────────────
+  // ── Persistence ─────────────────────────────────────────────────────────
   var STORE_KEY = 'mnl-warehouse-layout-v1';
-
   function collectState(){
     return {
       v: 1,
-      layout: layoutData.map(function(r){ return { levels: r.levels.slice(), x: r.x }; }),
-      full: skids.filter(function(s){ return s.userData.isFull; })
-                 .map(function(s){ return s.userData.locId; })
+      layout: layoutData.map(function(r){ return {levels:r.levels.slice(), x:r.x}; }),
+      full: skids.filter(function(s){ return s.userData.isFull; }).map(function(s){ return s.userData.id; })
     };
   }
   function saveLocal(){
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(collectState())); return true; }
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(collectState())); return true; }
     catch(e){ return false; }
   }
   function loadLocal(){
-    try { var raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : null; }
+    try{ var raw=localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : null; }
     catch(e){ return null; }
   }
   function applyLayout(state){
-    if(!state || !state.layout || !state.layout.length) return false;
-    layoutData.length = 0;
-    state.layout.forEach(function(r){
-      layoutData.push({ levels: (r.levels||[]).slice(), x: (typeof r.x==='number'? r.x : null) });
-    });
+    if(!state||!state.layout||!state.layout.length) return;
+    layoutData = state.layout.map(function(r){ return {levels:r.levels.slice(), x:r.x!==undefined?r.x:null}; });
     initPositions();
-    return true;
   }
   function applyFull(fullArr){
-    if(!fullArr) return;
-    var set = {};
-    fullArr.forEach(function(id){ set[id] = true; });
+    if(!fullArr||!fullArr.length) return;
+    var set = {}; fullArr.forEach(function(id){ set[id]=true; });
     skids.forEach(function(s){
-      var f = !!set[s.userData.locId];
-      s.userData.isFull = f;
-      s.material.color.setHex(f ? C_FULL : C_EMPTY);
+      s.userData.isFull = !!set[s.userData.id];
+      s.material.color.setHex(spotCol(s));
     });
     updateCounters();
   }
   function exportLayout(){
-    var json = JSON.stringify(collectState(), null, 2);
-    var blob = new Blob([json], { type: 'application/json' });
+    var data = JSON.stringify(collectState(), null, 2);
+    var blob = new Blob([data], {type:'application/json'});
     var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href = url; a.download = 'warehouse-layout.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    var a = document.createElement('a'); a.href=url; a.download='warehouse-layout.json'; a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   }
+  var _statusTimer = null;
   function flashStatus(msg, isErr){
     var el = document.getElementById('tool-status');
-    if(!el) return;
     el.textContent = msg;
-    el.style.color = isErr ? '#f87171' : '#4ade80';
-    clearTimeout(flashStatus._t);
-    flashStatus._t = setTimeout(function(){ el.textContent = ''; }, 2000);
+    el.className = isErr ? 'err' : '';
+    if(_statusTimer) clearTimeout(_statusTimer);
+    _statusTimer = setTimeout(function(){ el.textContent=''; }, 2000);
   }
 
-  // ── Full rebuild ────────────────────────────────────────────────────────
+  // ── Three.js setup ───────────────────────────────────────────────────────
+  var scene    = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1117);
+  scene.fog = new THREE.FogExp2(0x0d1117, 0.008);
+
+  var camera   = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 800);
+  var renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  document.getElementById('app').appendChild(renderer.domElement);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance  = 5;
+  controls.maxDistance  = 350;
+
+  // ── Lighting ─────────────────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.9);
+  sun.position.set(40,80,60); sun.castShadow=true;
+  sun.shadow.mapSize.width=sun.shadow.mapSize.height=2048;
+  scene.add(sun);
+  scene.add(new THREE.DirectionalLight(0x8090ff,0.25).position.set(-50,30,-40));
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  var raycaster = new THREE.Raycaster();
+  var mouse     = new THREE.Vector2();
+  var floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  var floorPt    = new THREE.Vector3();
+
+  function box(w,h,d,col,rx,ry,rz){
+    var g=new THREE.BoxGeometry(w,h,d);
+    var m=new THREE.MeshLambertMaterial({color:col});
+    var mesh=new THREE.Mesh(g,m);
+    mesh.position.set(rx,ry,rz);
+    return mesh;
+  }
+
+  // ── Row-number sprite ────────────────────────────────────────────────────
+  function makeRowLabel(parent, text, lx, ly, lz){
+    var size=128;
+    var cv=document.createElement('canvas'); cv.width=size*2; cv.height=size;
+    var ctx=cv.getContext('2d');
+    ctx.fillStyle='rgba(0,0,0,0)'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.font='bold 64px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#facc15'; ctx.fillText(text, cv.width/2, cv.height/2);
+    var tex=new THREE.CanvasTexture(cv);
+    var mat=new THREE.SpriteMaterial({map:tex, depthTest:false, transparent:true});
+    var sp=new THREE.Sprite(mat); sp.scale.set(2.4,1.2,1);
+    sp.position.set(lx, ly, lz);
+    parent.add(sp);
+  }
+
+  // ── Init rack positions ──────────────────────────────────────────────────
+  function initPositions(){
+    var nPairs=Math.ceil(layoutData.length/2);
+    var wW=(nPairs-1)*PAIR_P+PAIR_W;
+    var fpX=-wW/2+PAIR_W/2;
+    layoutData.forEach(function(row,ri){
+      if(row.x!==null) return;
+      var pi=Math.floor(ri/2), side=ri%2;
+      var pc=fpX+pi*PAIR_P;
+      row.x=pc+(side===0?-(BACK_GAP/2+RACK_D/2):(BACK_GAP/2+RACK_D/2));
+    });
+  }
+
+  // ── Scene objects ────────────────────────────────────────────────────────
+  var skids=[], rowGroups=[];
+  var staticMeshes=[], floorMesh=null;
+
+  function spotCol(mesh){ return mesh.userData.isFull ? C_FULL : C_EMPTY; }
+
+  function allRackMeshes(){ return rowGroups.map(function(g){ return g.children; }).reduce(function(a,b){ return a.concat(Array.from(b)); },[]); }
+  function ownerGroup(obj){
+    var o=obj;
+    while(o){ if(o.userData && o.userData.isRowGroup) return o; o=o.parent; }
+    return null;
+  }
+
+  function buildRacks(){
+    rowGroups.forEach(function(g){ scene.remove(g); });
+    rowGroups=[]; skids=[];
+
+    // x-sorted row numbering (R1 = leftmost)
+    var sortedIdx=layoutData.map(function(_,i){return i;});
+    sortedIdx.sort(function(a,b){return layoutData[a].x-layoutData[b].x;});
+    var rowNumByIndex=[];
+    sortedIdx.forEach(function(dataIdx,pos){rowNumByIndex[dataIdx]=pos+1;});
+
+    layoutData.forEach(function(row,ri){
+      var cols=row.levels;
+      var nCols=cols.length;
+      var z0=-(nCols*COL_Z)/2;
+      var rg=new THREE.Group();
+      rg.userData.isRowGroup=true; rg.userData.rowIndex=ri;
+      rg.position.x=row.x;
+
+      var rowNum=rowNumByIndex[ri];
+
+      cols.forEach(function(nLvl,ci){
+        var cz=z0+ci*COL_Z+COL_Z/2;
+        // upright posts
+        [[0,0],[RACK_D,0],[0,COL_Z],[RACK_D,COL_Z]].forEach(function(off){
+          var post=box(UT,nLvl*LVL_H+UT,UT,C_POST,off[0]-RACK_D/2,nLvl*LVL_H/2,cz-COL_Z/2+off[1]);
+          rg.add(post);
+        });
+        for(var lv=0;lv<nLvl;lv++){
+          var y=lv*LVL_H;
+          // beams
+          var fb=box(RACK_D,UT,UT,C_BEAM,0,y+LVL_H-UT/2,cz-COL_Z*0.4); rg.add(fb);
+          var bb=box(RACK_D,UT,UT,C_BEAM,0,y+LVL_H-UT/2,cz+COL_Z*0.4); rg.add(bb);
+          // spot
+          var sg=new THREE.BoxGeometry(RACK_D*0.82,SPOT_H,SPOT_W*0.82);
+          var sm=new THREE.MeshLambertMaterial({color:C_EMPTY});
+          var s=new THREE.Mesh(sg,sm);
+          s.position.set(0, y+SPOT_H/2+UT, cz);
+          var spotId='R'+rowNum+'-C'+(ci+1)+'-L'+(lv+1);
+          s.userData={isFull:false, row:rowNum, col:ci+1, lvl:lv+1, id:spotId, isSpot:true};
+          rg.add(s); skids.push(s);
+        }
+      });
+
+      // row number label — outside face
+      var labelX=(ri%2===0)?-(RACK_D/2+0.4):(RACK_D/2+0.4);
+      makeRowLabel(rg,'R'+rowNum,labelX,2.2,z0+cols.length*COL_Z+2.0);
+
+      scene.add(rg);
+      rowGroups.push(rg);
+    });
+  }
+
+  function computeBounds(){
+    if(!rowGroups.length) return {cx:0,z0:0,wW:10,wD:10,minX:-5,maxX:5};
+    var minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
+    rowGroups.forEach(function(g){
+      var ri=g.userData.rowIndex, row=layoutData[ri], cols=row.levels;
+      var x=g.position.x;
+      minX=Math.min(minX,x-RACK_D/2); maxX=Math.max(maxX,x+RACK_D/2);
+      var nC=cols.length;
+      var z0=-(nC*COL_Z)/2, z1=z0+nC*COL_Z;
+      minZ=Math.min(minZ,z0); maxZ=Math.max(maxZ,z1);
+    });
+    return {cx:(minX+maxX)/2, z0:minZ, wW:maxX-minX, wD:maxZ-minZ, minX:minX, maxX:maxX};
+  }
+
+  function buildStatic(b){
+    staticMeshes.forEach(function(m){ scene.remove(m); }); staticMeshes=[];
+    if(floorMesh){ scene.remove(floorMesh); }
+    var pad=8;
+    var fw=b.wW+pad*2, fd=b.wD+pad*2;
+    var fg=new THREE.BoxGeometry(fw,0.3,fd);
+    var fm=new THREE.MeshLambertMaterial({color:C_FLOOR});
+    floorMesh=new THREE.Mesh(fg,fm);
+    floorMesh.position.set(b.cx,-0.15,b.z0+b.wD/2);
+    floorMesh.receiveShadow=true;
+    scene.add(floorMesh);
+    // grid lines
+    var gl=new THREE.GridHelper(Math.max(fw,fd)*1.5,40,0x1e293b,0x1e293b);
+    gl.position.set(b.cx,0,b.z0+b.wD/2);
+    scene.add(gl); staticMeshes.push(gl);
+  }
+
   var bounds;
   function rebuild(){
-    bounds = computeBounds();
+    initPositions();
+    buildRacks();
+    bounds=computeBounds();
     buildStatic(bounds);
-    buildRacks(bounds);
     updateCounters();
     renderRowList();
   }
 
-  // Restore a previously-saved layout (this browser) before the first build
+  // ── Boot ─────────────────────────────────────────────────────────────────
   var bootState = loadLocal();
   if(bootState) applyLayout(bootState);
   rebuild();
   if(bootState) applyFull(bootState.full);
 
-  var midZ = bounds.z0 + bounds.wD/2;
-  controls.target.set(bounds.cx, 5, midZ);
-  camera.position.set(bounds.minX - 80, 60, midZ);
+  // Initial camera
+  camera.position.set(bounds.cx-40, 100, bounds.z0+bounds.wD/2+130);
+  controls.target.set(bounds.cx, 5, bounds.z0+bounds.wD/2);
   controls.update();
 
-  // ── Counters ────────────────────────────────────────────────────────────
+  // ── Render loop ───────────────────────────────────────────────────────────
+  var drag=null, hovered=null;
+  function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+  animate();
+
+  // ── Counters ─────────────────────────────────────────────────────────────
   function updateCounters(){
-    var full = skids.filter(function(s){ return s.userData.isFull; }).length;
-    document.getElementById('ce').textContent = skids.length - full;
-    document.getElementById('cf').textContent = full;
-    document.getElementById('ct').textContent = skids.length;
+    var tot=skids.length, full=skids.filter(function(s){return s.userData.isFull;}).length;
+    document.getElementById('ct').textContent=tot;
+    document.getElementById('cf').textContent=full;
+    document.getElementById('ce').textContent=tot-full;
   }
 
-  // ── Row highlight helpers ─────────────────────────────────────────────────
-  var hlRow = null;
-  var hlSaved = [];
+  // ── Resize ───────────────────────────────────────────────────────────────
+  window.addEventListener('resize',function(){
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
 
-  function highlightRow(rg){
-    if(hlRow === rg) return;
-    clearHighlight();
-    hlRow = rg;
-    rg.children.forEach(function(m){
-      if(!m.isMesh || m.userData.locId) return;
-      hlSaved.push({ m:m, c:m.material.color.getHex() });
-      m.material = m.material.clone();
-      m.material.color.setHex(C_SEL);
-    });
-  }
+  // ── Highlight ────────────────────────────────────────────────────────────
   function clearHighlight(){
-    if(!hlRow) return;
-    hlSaved.forEach(function(e){ e.m.material.color.setHex(e.c); });
-    hlSaved = [];
-    hlRow = null;
+    if(hovered){ hovered.material.color.setHex(spotCol(hovered)); hovered=null; }
   }
 
-  function ownerGroup(mesh){
-    for(var i=0; i<rowGroups.length; i++){
-      if(rowGroups[i].children.indexOf(mesh) !== -1) return rowGroups[i];
-    }
-    return null;
-  }
-
-  // ── Raycasting ──────────────────────────────────────────────────────────
-  var raycaster = new THREE.Raycaster();
-  var mouse     = new THREE.Vector2();
-  var hovered   = null;
-  var tooltip   = document.getElementById('tooltip');
-
-  function spotCol(s){ return s.userData.isFull ? C_FULL : C_EMPTY; }
-
-  // ── Drag state ──────────────────────────────────────────────────────────
-  var editMode = false;
-  var drag = null;
-  var floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
-  var floorPt    = new THREE.Vector3();
-
-  function allRackMeshes(){
-    var out = [];
-    rowGroups.forEach(function(rg){ rg.children.forEach(function(m){ if(m.isMesh) out.push(m); }); });
-    return out;
-  }
-
-  renderer.domElement.addEventListener('mousemove', function(e){
-    if(editMode && drag){ e.stopPropagation(); }
+  // ── Pointer events ───────────────────────────────────────────────────────
+  renderer.domElement.addEventListener('pointermove', function(e){
     mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
 
-    if(editMode){
-      tooltip.style.display = 'none';
-      if(drag){
-        raycaster.ray.intersectPlane(floorPlane, floorPt);
-        var newX = Math.round((floorPt.x - drag.offsetX) / GRID_SNAP) * GRID_SNAP;
-        drag.rg.position.x = newX;
-        layoutData[drag.rowIndex].x = newX;
-        renderer.domElement.style.cursor = 'grabbing';
-      } else {
-        var hits = raycaster.intersectObjects(allRackMeshes());
-        if(hits.length){
-          var rg = ownerGroup(hits[0].object);
-          if(rg) highlightRow(rg);
-          renderer.domElement.style.cursor = 'grab';
-        } else {
-          clearHighlight();
-          renderer.domElement.style.cursor = 'default';
-        }
-      }
+    if(drag){
+      raycaster.setFromCamera(mouse, camera);
+      raycaster.ray.intersectPlane(floorPlane, floorPt);
+      var nx = floorPt.x - drag.offsetX;
+      nx = Math.round(nx / GRID_SNAP) * GRID_SNAP;
+      drag.rg.position.x = nx;
+      var meta = document.querySelectorAll('.row-meta');
+      if(meta[drag.rowIndex]) meta[drag.rowIndex].textContent =
+        layoutData[drag.rowIndex].levels.reduce(function(a,n){return a+n;},0)+' spots  x='+nx.toFixed(1)+'m';
       return;
     }
 
-    if(hovered){ hovered.material.color.setHex(spotCol(hovered)); hovered=null; }
+    if(editMode) return;
+    raycaster.setFromCamera(mouse, camera);
     var hits = raycaster.intersectObjects(skids);
-    if(hits.length){
-      hovered = hits[0].object;
-      hovered.material.color.setHex(C_HOVER);
-      var d = hovered.userData;
-      document.getElementById('tt-loc').textContent = d.locId;
-      var st = document.getElementById('tt-status');
-      st.textContent = d.isFull ? 'FULL' : 'EMPTY';
-      st.className   = d.isFull ? 'full'  : 'empty';
-      tooltip.style.display = 'block';
-      tooltip.style.left = (e.clientX+16)+'px';
-      tooltip.style.top  = (e.clientY-12)+'px';
-      renderer.domElement.style.cursor = 'pointer';
+    var tooltip = document.getElementById('tooltip');
+    if(hits.length && hits[0].object.userData.isSpot){
+      var s=hits[0].object;
+      if(hovered!==s){ clearHighlight(); hovered=s; s.material.color.setHex(C_HOVER); }
+      document.getElementById('tt-loc').textContent=s.userData.id;
+      var st=document.getElementById('tt-status');
+      st.textContent=s.userData.isFull?'FULL':'EMPTY';
+      st.className=s.userData.isFull?'full':'empty';
+      tooltip.style.display='block';
+      tooltip.style.left=(e.clientX+16)+'px';
+      tooltip.style.top =(e.clientY-12)+'px';
+      renderer.domElement.style.cursor='pointer';
     } else {
-      tooltip.style.display = 'none';
-      renderer.domElement.style.cursor = 'default';
+      tooltip.style.display='none';
+      renderer.domElement.style.cursor='default';
     }
   });
 
-  // Capture phase so this fires before OrbitControls sees the event
-  renderer.domElement.addEventListener('mousedown', function(e){
-    if(!editMode) return;
-    // Prevent OrbitControls from starting pan/rotate during move mode
-    e.preventDefault();
-    e.stopPropagation();
+  // Capture phase pointerdown — fires before OrbitControls; only intercepts
+  // left-button drags on rack geometry so OrbitControls keeps zoom/pan.
+  renderer.domElement.addEventListener('pointerdown', function(e){
+    if(!editMode || e.button !== 0) return;
     mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
@@ -674,11 +579,13 @@
     if(!hits.length) return;
     var rg = ownerGroup(hits[0].object);
     if(!rg) return;
+    // Stop OrbitControls from also handling this pointer
+    e.stopPropagation();
     raycaster.ray.intersectPlane(floorPlane, floorPt);
     drag = { rg: rg, rowIndex: rg.userData.rowIndex, offsetX: floorPt.x - rg.position.x };
   }, true);
 
-  window.addEventListener('mouseup', function(){
+  window.addEventListener('pointerup', function(){
     if(drag){
       layoutData[drag.rowIndex].x = drag.rg.position.x;
       drag = null;
@@ -747,6 +654,7 @@
     editMode = false;
     drag = null;
     controls.enabled = true;
+    controls.enableRotate = true;
     clearHighlight();
     dragBanner.classList.remove('show');
     hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
@@ -775,10 +683,12 @@
         camera.position.set(bounds.cx, topDownDist(bounds), mz + 0.01);
         controls.target.set(bounds.cx, 0, mz);
         controls.update();
-        // Fully disable orbit so the left button belongs to row-dragging.
-        // (With controls enabled, OrbitControls' pointerdown preventDefault
-        //  suppresses the mousedown our drag relies on.)
-        controls.enabled = false;
+        // Disable rotate; keep zoom (scroll) and pan (right-drag) active.
+        // Row-drag uses capture-phase pointerdown + stopPropagation so it
+        // intercepts left-button before OrbitControls sees it.
+        controls.enableRotate = false;
+        controls.enablePan    = true;
+        controls.enableZoom   = true;
       } else {
         btn.textContent = '✕ Move Rows (drag)';
         btn.style.background = '';
@@ -787,7 +697,9 @@
         dragBanner.classList.remove('show');
         hudHint.textContent = 'Left-drag: rotate  |  Scroll: zoom  |  Right-drag: pan  |  Click spot: toggle full/empty';
         renderer.domElement.style.cursor = 'default';
-        controls.enabled = true;
+        controls.enableRotate = true;
+        controls.enablePan    = true;
+        controls.enableZoom   = true;
         clearHighlight();
         bounds = computeBounds();
         buildStatic(bounds);
@@ -803,39 +715,25 @@
     var list = document.getElementById('row-list');
     list.innerHTML = '';
 
-    var moveBtn = document.createElement('button');
-    moveBtn.id = 'move-toggle-btn';
-    moveBtn.textContent = editMode ? '✓ Done Moving Rows' : '✕ Move Rows (drag)';
-    moveBtn.style.cssText = 'display:block;width:calc(100% - 24px);margin:0 12px 10px;padding:7px 14px;border-radius:6px;font-size:0.75rem;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#aaa;transition:all 0.14s;';
-    if(editMode){
-      moveBtn.style.background = 'rgba(59,130,246,0.25)';
-      moveBtn.style.borderColor = '#3b82f6';
-      moveBtn.style.color = '#93c5fd';
-    }
-    list.appendChild(moveBtn);
+    // x-sorted for display
+    var sortedIdx = layoutData.map(function(_,i){return i;});
+    sortedIdx.sort(function(a,b){return layoutData[a].x-layoutData[b].x;});
 
-    layoutData.forEach(function(row, ri){
+    sortedIdx.forEach(function(ri){
+      var row = layoutData[ri];
+      var rowNum = ri+1; // display number in data order; label sprite uses x-sort
+
       var item = document.createElement('div');
       item.className = 'row-item' + (selectedRow===ri ? ' selected' : '');
 
       var header = document.createElement('div');
       header.className = 'row-item-header';
 
-      // Info area: clicking it toggles the editor open/closed
       var info = document.createElement('div');
-      info.style.cssText = 'flex:1;min-width:0;cursor:pointer;';
-      info.addEventListener('click', function(){
-        selectedRow = (selectedRow===ri) ? null : ri;
-        renderRowList();
-        if(selectedRow===ri){
-          var items = document.querySelectorAll('.row-item');
-          if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
-        }
-      });
 
       var label = document.createElement('div');
       label.className = 'row-label';
-      label.textContent = (selectedRow===ri ? '▾ ' : '▸ ') + 'Row ' + (ri+1);
+      label.textContent = 'Row '+rowNum+' ('+row.levels.length+' cols)';
 
       var meta = document.createElement('div');
       meta.className = 'row-meta';
@@ -857,84 +755,68 @@
         if(items[ri+1]) items[ri+1].scrollIntoView({block:'nearest'});
       });
 
-      var dupBtn = document.createElement('button');
-      dupBtn.className = 'dup-btn'; dupBtn.textContent = 'Dup';
-      dupBtn.addEventListener('click', function(e){
-        e.stopPropagation();
-        layoutData.splice(ri+1, 0, { levels: row.levels.slice(), x: row.x + PAIR_P });
-        selectedRow = ri;
-        rebuild();
-      });
-
       var delBtn = document.createElement('button');
       delBtn.className = 'del-btn'; delBtn.textContent = 'Del';
       delBtn.addEventListener('click', function(e){
         e.stopPropagation();
-        if(layoutData.length<=1) return;
         layoutData.splice(ri,1);
-        if(selectedRow===ri) selectedRow = ri > 0 ? ri-1 : null;
-        else if(selectedRow > ri) selectedRow--;
+        if(selectedRow===ri) selectedRow=null;
         rebuild();
       });
 
-      actions.appendChild(editBtn);
-      actions.appendChild(dupBtn);
-      actions.appendChild(delBtn);
-      header.appendChild(info);
-      header.appendChild(actions);
-
+      actions.appendChild(editBtn); actions.appendChild(delBtn);
+      header.appendChild(info); header.appendChild(actions);
       item.appendChild(header);
-      if(selectedRow===ri) item.appendChild(buildRowEditor(ri));
+
+      if(selectedRow === ri){
+        item.appendChild(buildEditor(ri));
+      }
+
+      item.addEventListener('click', function(e){
+        e.stopPropagation();
+        selectedRow = (selectedRow===ri)?null:ri;
+        renderRowList();
+      });
+
       list.appendChild(item);
     });
   }
 
-  function buildRowEditor(ri){
+  function buildEditor(ri){
     var row = layoutData[ri];
     var editor = document.createElement('div');
     editor.className = 'row-editor';
+    editor.addEventListener('click', function(e){ e.stopPropagation(); });
 
-    var title = document.createElement('div');
-    title.className = 'editor-title';
-    title.textContent = 'Row '+(ri+1)+' — edit column levels';
-    editor.appendChild(title);
+    var lbl = document.createElement('label');
+    lbl.textContent = 'Spots per column (one box = one column):';
+    editor.appendChild(lbl);
 
-    var colEditors = document.createElement('div');
-    colEditors.className = 'col-editors';
+    var inputs = document.createElement('div');
+    inputs.className = 'level-inputs';
+    row.levels.forEach(function(n,i){
+      var inp = document.createElement('input');
+      inp.className='level-input'; inp.type='number'; inp.min=1; inp.max=12; inp.value=n;
+      inp.addEventListener('change', function(){ row.levels[i]=Math.max(1,Math.min(12,parseInt(inp.value)||1)); });
+      inputs.appendChild(inp);
+    });
+    editor.appendChild(inputs);
 
-    function refreshColEditors(){
-      colEditors.innerHTML = '';
-      row.levels.forEach(function(n, ci){
-        var ce  = document.createElement('div'); ce.className='col-editor';
-        var lbl = document.createElement('label'); lbl.textContent='C'+(ci+1);
-        var inp = document.createElement('input');
-        inp.type='number'; inp.min=1; inp.max=12; inp.value=n;
-        inp.addEventListener('change',function(){
-          var v=parseInt(inp.value,10);
-          if(v>=1&&v<=12) row.levels[ci]=v; else inp.value=row.levels[ci];
-        });
-        var delC = document.createElement('button'); delC.className='del-col'; delC.textContent='✕';
-        delC.addEventListener('click',function(e){
-          e.stopPropagation();
-          if(row.levels.length<=1) return;
-          row.levels.splice(ci,1); refreshColEditors();
-        });
-        ce.appendChild(lbl); ce.appendChild(inp); ce.appendChild(delC);
-        colEditors.appendChild(ce);
-      });
-    }
-    refreshColEditors();
-    editor.appendChild(colEditors);
+    var btns = document.createElement('div');
+    btns.className = 'editor-btns';
 
-    var btns = document.createElement('div'); btns.className='editor-btns';
+    var addCol = document.createElement('button'); addCol.textContent='+ Col';
+    addCol.addEventListener('click', function(e){
+      e.stopPropagation();
+      var last=row.levels[row.levels.length-1]||4;
+      row.levels.push(last);
+      rebuild();
+    });
 
-    var addCol = document.createElement('button'); addCol.className='editor-btn add-col'; addCol.textContent='+ Column';
-    addCol.addEventListener('click',function(e){ e.stopPropagation(); row.levels.push(row.levels[row.levels.length-1]||4); refreshColEditors(); });
+    var apply = document.createElement('button'); apply.textContent='Apply';
+    apply.addEventListener('click', function(e){ e.stopPropagation(); rebuild(); });
 
-    var apply = document.createElement('button'); apply.className='editor-btn apply'; apply.textContent='✓ Apply';
-    apply.addEventListener('click',function(e){ e.stopPropagation(); selectedRow=null; rebuild(); });
-
-    var cancel = document.createElement('button'); cancel.className='editor-btn cancel'; cancel.textContent='Cancel';
+    var cancel = document.createElement('button'); cancel.textContent='Cancel';
     cancel.addEventListener('click',function(e){ e.stopPropagation(); selectedRow=null; renderRowList(); });
 
     btns.appendChild(addCol); btns.appendChild(apply); btns.appendChild(cancel);
@@ -944,8 +826,8 @@
 
   document.getElementById('edit-add-row').addEventListener('click',function(){
     var tmpl = layoutData.length>0 ? layoutData[layoutData.length-1].levels.slice() : [4,5,5,6];
-    var lastX = layoutData.length>0 ? layoutData[layoutData.length-1].x : 0;
-    layoutData.push({ levels: tmpl, x: lastX + PAIR_P });
+    var maxX = layoutData.length>0 ? layoutData.reduce(function(m,r){ return Math.max(m, r.x||0); }, -Infinity) : 0;
+    layoutData.push({ levels: tmpl, x: maxX + PAIR_P });
     selectedRow = layoutData.length-1;
     rebuild();
     document.getElementById('row-list').scrollTop = 999999;
@@ -967,51 +849,34 @@
   });
   document.getElementById('importInput').addEventListener('change', function(){
     var file = this.files && this.files[0];
-    this.value = '';                      // allow re-importing the same file
     if(!file) return;
     var reader = new FileReader();
-    reader.onload = function(){
-      var state;
-      try { state = JSON.parse(reader.result); }
-      catch(e){ flashStatus('Invalid file', true); return; }
-      if(!applyLayout(state)){ flashStatus('Invalid file', true); return; }
-      selectedRow = null;
-      rebuild();
-      applyFull(state.full);
-      saveLocal();                        // persist the imported layout too
-      flashStatus('Imported ✓');
+    reader.onload = function(ev){
+      try{
+        var state = JSON.parse(ev.target.result);
+        if(!state.layout) throw new Error('missing layout');
+        applyLayout(state);
+        rebuild();
+        if(state.full) applyFull(state.full);
+        flashStatus('Imported ✓');
+      } catch(e){
+        flashStatus('Import failed: '+e.message, true);
+      }
     };
     reader.readAsText(file);
+    this.value='';
   });
 
   document.getElementById('resetBtn').addEventListener('click', function(){
-    if(!window.confirm('Discard your saved layout and restore the default?')) return;
-    try { localStorage.removeItem(STORE_KEY); } catch(e){}
-    layoutData.length = 0;
-    ROW_GROUPS.forEach(function(g){
-      for(var i=0;i<g[0];i++) layoutData.push({ levels: DEFAULT_TYPES[g[1]].slice(), x: null });
-    });
-    initPositions();
-    selectedRow = null;
+    if(!confirm('Clear saved layout and restore the default?')) return;
+    localStorage.removeItem(STORE_KEY);
+    layoutData = buildDefaultLayout();
     rebuild();
-    flashStatus('Reset to default ✓');
+    flashStatus('Reset ✓');
   });
 
+  var editMode = false;
   renderRowList();
-
-  // ── Resize ──────────────────────────────────────────────────────────────
-  window.addEventListener('resize',function(){
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  // ── Render loop ──────────────────────────────────────────────────────────────
-  (function animate(){
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  })();
 })();
 </script>
 </body>
