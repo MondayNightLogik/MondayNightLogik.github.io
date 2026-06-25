@@ -246,10 +246,12 @@
   var RACK_D=1.2, SPOT_W=1.1, COL_Z=SPOT_W, LVL_H=2.0;
   var BACK_GAP=0.22, AISLE=4.5;
   var PAIR_W=2*RACK_D+BACK_GAP, PAIR_P=PAIR_W+AISLE;
-  var SPOT_H=1.5, UT=0.10, GRID_SNAP=1.0;
+  var SPOT_H=1.5, UT=0.10, GRID_SNAP=0.1;
   // Back wall reference: column 1 of every row is anchored 4 ft (1.2192 m)
   // off the wall so all column 1's line up down the whole layout.
   var BACK_WALL_Z=0, WALL_OFF=1.2192;
+  // Real room dimensions: 300 ft × 80 ft
+  var ROOM_W=91.44, ROOM_D=24.384;
 
   var C_EMPTY=0x4ade80, C_FULL=0xf87171, C_HOVER=0x60a5fa, C_FLOOR=0x1a1a2e;
   var C_BEAM=0x334155, C_POST=0x475569, C_UPR=0x1e3a5f;
@@ -459,39 +461,48 @@
   }
 
   function computeBounds(){
-    if(!rowGroups.length) return {cx:0,z0:0,wW:10,wD:10,minX:-5,maxX:5};
-    var minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;
-    rowGroups.forEach(function(g){
-      var ri=g.userData.rowIndex, row=layoutData[ri], cols=row.levels;
-      var x=g.position.x;
-      minX=Math.min(minX,x-RACK_D/2); maxX=Math.max(maxX,x+RACK_D/2);
-      var nC=cols.length;
-      var z0=BACK_WALL_Z+WALL_OFF, z1=z0+nC*COL_Z;
-      minZ=Math.min(minZ,z0); maxZ=Math.max(maxZ,z1);
-    });
-    return {cx:(minX+maxX)/2, z0:minZ, wW:maxX-minX, wD:maxZ-minZ, minX:minX, maxX:maxX};
+    // Always frame to the real room so camera moves don't jump around
+    return {
+      cx: 0,
+      z0: BACK_WALL_Z,
+      wW: ROOM_W,
+      wD: ROOM_D,
+      minX: -ROOM_W/2,
+      maxX:  ROOM_W/2
+    };
   }
 
   function buildStatic(b){
     staticMeshes.forEach(function(m){ scene.remove(m); }); staticMeshes=[];
     if(floorMesh){ scene.remove(floorMesh); }
-    var pad=8;
-    var fw=b.wW+pad*2, fd=b.wD+pad*2;
-    var fg=new THREE.BoxGeometry(fw,0.3,fd);
+    // Floor always matches the real room (300 ft × 80 ft)
+    var rcx=0, rcz=ROOM_D/2;
+    var fg=new THREE.BoxGeometry(ROOM_W,0.3,ROOM_D);
     var fm=new THREE.MeshLambertMaterial({color:C_FLOOR});
     floorMesh=new THREE.Mesh(fg,fm);
-    floorMesh.position.set(b.cx,-0.15,b.z0+b.wD/2);
+    floorMesh.position.set(rcx,-0.15,rcz);
     floorMesh.receiveShadow=true;
     scene.add(floorMesh);
-    // grid lines
-    var gl=new THREE.GridHelper(Math.max(fw,fd)*1.5,40,0x1e293b,0x1e293b);
-    gl.position.set(b.cx,0,b.z0+b.wD/2);
+    // Grid scaled to the real room — 1 cell per 10 ft (3.048 m)
+    var gridSize=Math.max(ROOM_W,ROOM_D)*1.05;
+    var gridDiv=Math.round(Math.max(ROOM_W,ROOM_D)/3.048);
+    var gl=new THREE.GridHelper(gridSize,gridDiv,0x1e293b,0x1e293b);
+    gl.position.set(rcx,0,rcz);
     scene.add(gl); staticMeshes.push(gl);
-    // back wall — column 1 of every row sits WALL_OFF (4 ft) in front of it
-    var wallH=Math.max(SPOT_H,LVL_H)*2+2;
-    var wall=box(fw,wallH,0.25,0x243049,b.cx,wallH/2,BACK_WALL_Z-0.125);
-    wall.receiveShadow=true;
-    scene.add(wall); staticMeshes.push(wall);
+    // Walls (back, front, left, right)
+    var wallH=Math.max(SPOT_H,LVL_H)*2+2, wt=0.25;
+    // back wall (Z = BACK_WALL_Z)
+    var wBack=box(ROOM_W,wallH,wt,0x243049,rcx,wallH/2,BACK_WALL_Z-wt/2);
+    scene.add(wBack); staticMeshes.push(wBack);
+    // front wall (Z = ROOM_D)
+    var wFront=box(ROOM_W,wallH,wt,0x243049,rcx,wallH/2,ROOM_D+wt/2);
+    scene.add(wFront); staticMeshes.push(wFront);
+    // left wall (X = -ROOM_W/2)
+    var wLeft=box(wt,wallH,ROOM_D+wt*2,0x1e2a3a,-ROOM_W/2-wt/2,wallH/2,rcz);
+    scene.add(wLeft); staticMeshes.push(wLeft);
+    // right wall (X = +ROOM_W/2)
+    var wRight=box(wt,wallH,ROOM_D+wt*2,0x1e2a3a,ROOM_W/2+wt/2,wallH/2,rcz);
+    scene.add(wRight); staticMeshes.push(wRight);
   }
 
   var bounds;
