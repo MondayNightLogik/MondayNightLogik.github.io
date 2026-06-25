@@ -473,10 +473,10 @@
   }
   rebuild();
 
-  // Initial camera
+  // Initial camera — side view so rows appear as parallel lanes with aisles between them
   var midZ = bounds.z0 + bounds.wD/2;
   controls.target.set(bounds.cx, 5, midZ);
-  camera.position.set(bounds.cx, 120, midZ+130);
+  camera.position.set(bounds.minX - 80, 60, midZ);
   controls.update();
 
   // ── Counters ────────────────────────────────────────────────────────────
