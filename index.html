@@ -1021,10 +1021,19 @@
     renderer.domElement.style.cursor='crosshair';
   }, false);
 
-  // Delete-mode click: remove the hovered upright frame from its row
+  // Delete-mode click: re-raycast to confirm frame is still under cursor before deleting
   renderer.domElement.addEventListener('click', function(e){
     if(!deleteMode) return;
     if(!delHovered) return;
+    mouse.x=(e.clientX/window.innerWidth)*2-1;
+    mouse.y=-(e.clientY/window.innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(posts);
+    if(!hits.length){ clearDelHover(); return; }
+    var p=hits[0].object;
+    var fi2=p.userData.frameIdx, nC=p.userData.nCols;
+    if(fi2<=0 || fi2>=nC){ clearDelHover(); return; }
+    if(p.userData.rowIndex!==delHovered.rowIndex || fi2!==delHovered.frameIdx){ clearDelHover(); return; }
     var ri=delHovered.rowIndex, fi=delHovered.frameIdx;
     delHovered=null;
     var row=layoutData[ri];
