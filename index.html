@@ -270,9 +270,9 @@
   var COL_Z   = SPOT_W * 2;    // bay Z-width = 2 pallets side by side = 2.2 m
   var LVL_H   = 2.0;
   var BACK_GAP = 0.22;
-  var PAIR_W  = 2*RACK_D + BACK_GAP;  // back-to-back pair total X width = 2.62 m
   var AISLE   = 4.5;
-  var PAIR_P  = PAIR_W + AISLE;       // pair pitch = 7.12 m
+  var PAIR_W  = AISLE + 2*RACK_D;     // pair total width: aisle between faces + two rack depths = 6.9 m
+  var PAIR_P  = PAIR_W + BACK_GAP;    // pair pitch: pair width + back-to-back gap = 7.12 m
   var SPOT_H  = 1.5, UT = 0.10;
   var GRID_SNAP = 1.0;   // snap rows to 1 m grid when dragging
 
@@ -303,7 +303,7 @@
       var pi   = Math.floor(ri/2);
       var side = ri % 2;
       var pc   = fpX + pi * PAIR_P;
-      row.x = pc + (side===0 ? -(BACK_GAP/2+RACK_D/2) : (BACK_GAP/2+RACK_D/2));
+      row.x = pc + (side===0 ? -(AISLE/2+RACK_D/2) : (AISLE/2+RACK_D/2));
     });
   }
   initPositions();
